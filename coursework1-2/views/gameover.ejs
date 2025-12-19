@@ -1,0 +1,45 @@
+<div class="gameover-container">
+  <div class="gameover-card">
+    <h1>Game Over</h1>
+
+    <h3>Final Scores</h3>
+    <ol class="scores-list">
+      <li
+        v-if="sortedFinalScores.length === 0"
+      >
+        <em>No scores yet…</em>
+      </li>
+
+      <li
+        v-for="player in sortedFinalScores"
+        :key="player[0]"
+        class="scores-item"
+      >
+        <span class="player-name">{{ player[0] }}</span>
+        <span class="player-score">{{ player[1] }}</span>
+      </li>
+    </ol>
+
+    <h3 class="mt-4">Podium</h3>
+    <ol class="scores-list">
+      <li
+        v-if="finalPodium.length === 0"
+      >
+        <em>No winners yet…</em>
+      </li>
+
+      <li
+        v-for="player in finalPodium"
+        :key="'podium-' + player[0]"
+        class="scores-item"
+      >
+        <span class="player-name">{{ player[0] }}</span>
+        <span class="player-score">{{ player[1] }}</span>
+      </li>
+    </ol>
+
+    <button class="btn btn-primary mt-4" @click="newGame()">
+      Reset Game
+    </button>
+  </div>
+</div>

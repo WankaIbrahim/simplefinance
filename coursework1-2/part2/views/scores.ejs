@@ -1,0 +1,20 @@
+<div class="scores-container">
+  <div class="scores-card">
+    <h2>Scores</h2>
+
+    <ol class="scores-list">
+      <li v-if="gameInfo[6].length === 0">
+        <em>No scores yet…</em>
+      </li>
+
+      <li
+        v-for="player in gameInfo[6]"
+        :key="player[0]"
+        class="scores-item"
+      >
+        <span class="player-name">{{ player[0] }}</span>
+        <span class="player-score">{{ player[1] }}</span>
+      </li>
+    </ol>
+  </div>
+</div>

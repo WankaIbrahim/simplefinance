@@ -1,0 +1,24 @@
+<div class="voting-container">
+  <div v-if="gameInfo[4].allowed" class="voting-card">
+    <div v-if="gameInfo[4].prompt && gameInfo[4].prompt.length">
+      <h2>Time to vote!</h2>
+      <h3 class="voting-prompt">{{ gameInfo[4].prompt }}</h3>
+
+      <div class="vote-buttons">
+        <button
+          v-for="answer in gameInfo[4].vote"
+          :key="answer"
+          @click="voteForAnswer(answer)"
+        >
+          {{ answer === '' ? '(no answer)' : answer }}
+        </button>
+      </div>
+    </div>
+
+    <h3 v-else>Waiting for other players…</h3>
+  </div>
+
+  <div v-else class="voting-card">
+    <h2>Please wait while everyone else votes…</h2>
+  </div>
+</div>

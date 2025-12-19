@@ -1,0 +1,69 @@
+<div class="results-container">
+  <div class="results-card">
+    <h2>Results are in</h2>
+
+    <h4 class="mt-2">{{ gameInfo[5].prompt }}</h4>
+
+    <div
+      v-if="gameInfo[5].voteResults && gameInfo[5].voteResults.length === 2"
+      class="mt-3"
+    >
+      <div class="mb-3 p-2 border rounded">
+        <h5 class="mb-1">Answer A</h5>
+        <p class="mb-1">
+          {{ gameInfo[5].voteResults[0].text || '(no answer)'}} :
+          <strong>{{ gameInfo[5].voteResults[0].votes }}</strong>
+        </p>
+        <h6 class="mb-1">
+          By: <strong>{{ gameInfo[5].voteResults[0].user }}</strong>
+        </h6>
+
+        <p class="mb-1"><small>Voted by:</small></p>
+        <ul class="mb-0 ps-3">
+          <li
+            v-if="!gameInfo[5].voteResults[0].voters || gameInfo[5].voteResults[0].voters.length === 0"
+          >
+            <em>No votes for this answer</em>
+          </li>
+          <li
+            v-for="name in gameInfo[5].voteResults[0].voters"
+            :key="'ans0-voter-' + name"
+          >
+            {{ name }}
+          </li>
+        </ul>
+      </div>
+
+      <div class="mb-3 p-2 border rounded">
+        <h5 class="mb-1">Answer B</h5>
+        <p class="mb-1">
+          {{ gameInfo[5].voteResults[1].text || '(no answer)'}} :
+          <strong>{{ gameInfo[5].voteResults[1].votes }}</strong>
+        </p>
+        <h6 class="mb-1">
+          By: <strong>{{ gameInfo[5].voteResults[1].user }}</strong>
+        </h6>
+
+        <p class="mb-1"><small>Voted by:</small></p>
+        <ul class="mb-0 ps-3">
+          <li
+            v-if="!gameInfo[5].voteResults[1].voters || gameInfo[5].voteResults[1].voters.length === 0"
+          >
+            <em>No votes for this answer</em>
+          </li>
+          <li
+            v-for="name in gameInfo[5].voteResults[1].voters"
+            :key="'ans1-voter-' + name"
+          >
+            {{ name }}
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div v-else>
+      <em>Waiting for results...</em>
+    </div>
+
+  </div>
+</div>

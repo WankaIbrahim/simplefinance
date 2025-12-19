@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+
+  <%- include('header'); -%>
+
+  <div id="app" class="w-100">
+    <div v-if="admin">
+      <%- include('admin'); -%>
+    </div>
+
+    <div v-if="loggedIn">
+      <div class="text-center mb-3">
+        <h1 class="username d-inline-block m-0">
+          {{ audience ? ('Audience: ' + displayUsername) : displayUsername }}
+        </h1>
+      </div>
+
+      <div
+        class="global-prompt mb-3 d-flex justify-content-center"
+        v-if="gameState !== 1 && gameState !== 7"
+      >
+        <div class="w-100" style="max-width: 480px;">
+          <button
+            class="btn btn-outline-primary btn-sm w-100"
+            @click="togglePromptBox"
+          >
+            Suggest a prompt
+          </button>
+
+          <div
+            v-if="showPromptBox"
+            class="card mt-2 p-3"
+          >
+            <small class="text-muted d-block mb-2">
+              You can submit prompts at any time while the game is running.
+            </small>
+
+            <input
+              type="text"
+              class="form-control form-control-sm mb-2"
+              v-model="userPrompt"
+              @keyup.enter="sendPrompt"
+              placeholder="Enter a funny prompt..."
+            >
+
+            <div class="d-flex justify-content-between">
+              <button
+                class="btn btn-sm btn-secondary"
+                @click="cancelPrompt"
+              >
+                Cancel
+              </button>
+              <button
+                class="btn btn-sm btn-primary"
+                @click="sendPrompt"
+              >
+                Submit prompt
+              </button>
+            </div>
+
+            <p
+              v-if="gameInfo[2].success"
+              class="text-success mt-2 mb-0 small text-center"
+            >
+              Prompt submitted!
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="gameState==1">
+        <%- include('joining'); -%>
+      </div>
+      <div v-else-if="gameState==2">
+        <%- include('prompts'); -%>
+      </div>
+      <div v-else-if="gameState==3">
+        <%- include('answer'); -%>
+      </div>
+      <div v-else-if="gameState==4">
+        <%- include('voting'); -%>
+      </div>
+      <div v-else-if="gameState==5">
+        <%- include('results'); -%>
+      </div>
+      <div v-else-if="gameState==6">
+        <%- include('scores'); -%>
+      </div>
+      <div v-else-if="gameState==7">
+        <%- include('gameover'); -%> 
+      </div>
+
+      <div class="roundCounter mt-3 text-center">
+        Current Round: {{ currentRound }}
+      </div>
+    </div>
+
+    <div v-else>
+      <%- include('joining'); -%>
+    </div>
+  </div>
+
+  <%- include('footer'); -%>
+
+</html>
