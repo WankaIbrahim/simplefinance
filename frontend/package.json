@@ -1,7 +1,7 @@
 {
-  "name": "quipecs",
+  "name": "simplefinance",
   "version": "1.0.0",
-  "description": "ECS CW1 Part2",
+  "description": "Cload Application Development Group Coursework",
   "main": "app.js",
   "engines": {
     "node": "16.x"
