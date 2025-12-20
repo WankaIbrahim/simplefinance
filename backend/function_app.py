@@ -16,15 +16,67 @@ user_container_proxy = quiplash_db_proxy.get_container_client(os.environ['UserCo
 #Accesses for the Cosmos DB for another container : To DO
 #...
 
-def user_register():
+
+def user_register(req: func.HttpResponse, usercontainerbinding: func.Out[func.Document]) -> func.HttpResponse:
+    #POST
+    req_body = req.get_json()
+    logging.info("User Register Request")
+
+    if len(req_body['usernmae'])  < 6 or len(req_body['username']) > 20:
+        username_response_body = json.dumps({'result': False, 'msg': "Username less than 6 characters or more than 20 "})
+        return func.HttpResponse(body=username_response_body, mimetype="application/json")
+
+    if len(req_body['password']) < 6 or len(req_body['password']) > 20:
+        password_response_body = json.dumps({'result': False, 'msg' : "Password is less than 6 characters or more than 20, try a new one!"})
+        return func.HttpResponse(body=password_response_body, mimetype="application/json")
+
+
+    SQL = """
+        SELECT * from c.id 
+        FROM c
+        Where c.username = @username
+        """
+
+    parameters  = [{"name" : "@username", "value" : req_body['username']}]
+    rows = list(user_container_proxy.query_items(
+        query=SQL, parameters=parameters, enable_cross_partition_query=True,
+    ))
+    if rows:
+        #Already exists if a pull works
+        pre_existing_user_response_body = json.dunps({"result": False, "msg": "A user with these details already exists, try again!"})  
+        return func.HttpResponse(body=pre_existing_user_response_body, mimetype="application/json")
+
+    try:
+        user_register_document = {"id" : str(uuid.uuid64()),
+                                  "username" : req_body['username'],
+                                  "password" : req_body['password']
+                                  #, if more to do then do the more should be initialised to 0
+                                  }
+
+    except:
+        return func.HttpResponse("Something went wrong")
+
+    try:
+        #Try to create an object
+        user_register_document_for_cosmos = func.Document.from_dict(user_register_document)
+        usercontainerbinding.set(user_register_document_for_cosmos)
+        logging.info("Out Bind has been successful")
+        true_object_response_body = json.dumps({"result": True, "msg": "OK"})
+        return func.HttpResponse(body=true_object_response_body, mimetype="application/json")
+    except Exception as error:
+        logging.error(error)
+        return func.HttpResponse("There was an error when registering") 
+
+
+def user_login() -> func.HttpResponse:
+    #POST
     pass
 
-def user_login():
+def delete_user()-> func.HttpResponse:
+    #DELETE
     pass
 
-def delete_user():
-    pass
 
-
-def forgot_password():
+def forgot_password()-> func.HttpResponse:
+    #POST
     pass
