@@ -16,7 +16,12 @@ user_container_proxy = quiplash_db_proxy.get_container_client(os.environ['UserCo
 #Accesses for the Cosmos DB for another container : To DO
 #...
 
-
+@app.route(route="user/register", methods=[func.HttpMethod.POST] ,auth_level=func.AuthLevel.FUNCTION)
+@app.cosmos_db_output( arg_name="usercontainerbinding",
+        	        database_name=os.environ['DatabaseName'],
+                      container_name=os.environ['UserContainerName'],
+                      create_if_not_exists=True,
+                      connection='AzureCosmosDBConnectionString')
 def user_register(req: func.HttpResponse, usercontainerbinding: func.Out[func.Document]) -> func.HttpResponse:
     #POST
     req_body = req.get_json()
