@@ -101,10 +101,33 @@ def user_login(req: func.HttpRequest) -> func.HttpResponse:
         is_password_and_username_body = json.dumps({"result": True, "msg" : "You Have sucessfully logged in"})
         return func.HttpResponse(body=is_password_and_username_body, mimetype="application/json")
 
-@app.route(route="user/delete")
-def delete_user()-> func.HttpResponse:
+@app.route(route="user/delete", methods=[func.HttpMethod.DELETE], auth_level=func.AuthLevel.FUNCTION)
+def delete_user(req: func.HttpRequest)-> func.HttpResponse:
     #DELETE
-    pass
+    username = req.params.get("username") # Passwords will be in the url but it doesn't matter too much
+    password = req.params.get("password") # ^^^, we don't care too much right? Can always be changed to a json
+    SQL = """
+            SELECT TOP 1 * 
+            FROM c
+            WHERE c.username = @username
+            AND c.password = @password
+    """
+    parameters  = [{"name" : "@username", "value" : username},
+                   {"name" : "@password", "value" : password},]
+    
+    username_and_password_rows = list(user_container_proxy.query_items(
+        query = SQL, parameters = parameters, enable_corss_partition_query=True
+    ))
+    if not username_and_password_rows:
+        wrong_details_response_body = json.dumps({"result" : False, "msg": "Username or password inccorect"})
+        return func.HttpResponse(body=wrong_details_response_body, mimetype="application/json")
+    
+    user_document = username_and_password_rows[0] # first thing returned from doc (1), id (2), username password (3)
+    user_id = user_document["id"] 
+    user_container_proxy.delete_item(item=user_id, partition_key =username)
+
+    true_delete_user_response_body = json.dumps({"result" : True, "msg" : "This user has been deleted"})
+    return func.HttpResponse(body=true_delete_user_response_body, mimetype="application/json")
 
 @app.route(route="user/passforgot")
 def forgot_password()-> func.HttpResponse:
