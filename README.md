@@ -4,8 +4,10 @@
 Last update: `20/12/2025`
 
 File Structure:
+```
 > backend
 // someone document the backend file structure
+```
 
 ```
 > frontend
@@ -27,4 +29,6 @@ File Structure:
 To run the back-end server: need to setup azure
 
 To run the front-end server:
-```npm start```
+```
+npm start
+```
