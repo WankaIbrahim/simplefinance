@@ -3,6 +3,7 @@ import json
 import logging
 import os 
 from shared_code.User import User
+import uuid
 from azure.cosmos import CosmosClient
 from azure.cosmos.exceptions import CosmosHttpResponseError#, more to import
 app = func.FunctionApp()
@@ -23,12 +24,12 @@ user_container_proxy = quiplash_db_proxy.get_container_client(os.environ['UserCo
                       container_name=os.environ['UserContainerName'],
                       create_if_not_exists=True,
                       connection='AzureCosmosDBConnectionString')
-def user_register(req: func.HttpResponse, usercontainerbinding: func.Out[func.Document]) -> func.HttpResponse:
+def user_register(req: func.HttpRequest, usercontainerbinding: func.Out[func.Document]) -> func.HttpResponse:
     #POST
     req_body = req.get_json()
     logging.info("User Register Request")
 
-    if len(req_body['usernmae'])  < 6 or len(req_body['username']) > 20:
+    if len(req_body['username'])  < 6 or len(req_body['username']) > 20:
         username_response_body = json.dumps({'result': False, 'msg': "Username less than 6 characters or more than 20 "})
         return func.HttpResponse(body=username_response_body, mimetype="application/json")
 
@@ -38,7 +39,7 @@ def user_register(req: func.HttpResponse, usercontainerbinding: func.Out[func.Do
 
 
     SQL = """
-        SELECT * from c.id 
+        SELECT TOP 1 c.id
         FROM c
         Where c.username = @username
         """
@@ -49,7 +50,7 @@ def user_register(req: func.HttpResponse, usercontainerbinding: func.Out[func.Do
     ))
     if rows:
         #Already exists if a pull works
-        pre_existing_user_response_body = json.dunps({"result": False, "msg": "A user with these details already exists, try again!"})  
+        pre_existing_user_response_body = json.dumps({"result": False, "msg": "A user with these details already exists, try again!"})  
         return func.HttpResponse(body=pre_existing_user_response_body, mimetype="application/json")
 
     try:
@@ -73,16 +74,39 @@ def user_register(req: func.HttpResponse, usercontainerbinding: func.Out[func.Do
         logging.error(error)
         return func.HttpResponse("There was an error when registering") 
 
-
-def user_login() -> func.HttpResponse:
+@app.route(route="user/login",)
+def user_login(req: func.HttpRequest) -> func.HttpResponse:
     #POST
-    pass
 
+    username = req.params.get("username")
+    password = req.params.get("password")
+    if not username or not password:
+        no_user_or_password_response_body = json.dumps({"result" : False, "msg": "Username or password is incorrect !"})
+        return func.HttpResponse(body = no_user_or_password_response_body, mimetype="application/json")
+    SQL = """
+        SELETC TOP c.id
+        from c
+        WHERE c.username = @username
+        AND c.password = @password
+    """
+    parameters = [{"name" :  "@username", "value" : username},
+                  {"name" : "@password", "value" : password},]
+    password_and_username_rows = list(user_container_proxy.query_items(
+        query=SQL, parameters=parameters, enable_cross_partition = True
+    ))
+    if not password_and_username_rows:
+        no_username_or_password_response_body = json.dumps({"result" : False, "msg" : "Incorrect Username or Password"})
+        return func.HttpResponse(body=no_user_or_password_response_body, mimetype="application/json")
+    else:
+        is_password_and_username_body = json.dumps({"result": True, "msg" : "You Have sucessfully logged in"})
+        return func.HttpResponse(body=is_password_and_username_body, mimetype="application/json")
+
+@app.route(route="user/delete")
 def delete_user()-> func.HttpResponse:
     #DELETE
     pass
 
-
+@app.route(route="user/passforgot")
 def forgot_password()-> func.HttpResponse:
     #POST
     pass
