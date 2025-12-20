@@ -12,6 +12,13 @@ const AZURE_API_KEY = process.env.AZURE_API_KEY || null;
 app.set('view engine', 'ejs');
 app.use('/static', express.static('public'));
 
+app.get('/login', (req, res) => {
+    res.render('login');
+});
+
+app.get('/', (req, res) => {
+    res.render('welcome');
+});
 
 async function callAzureAPI(endpoint, method, body = null) {
   const url = `${BACKEND_ENDPOINT}${endpoint}`;
@@ -47,7 +54,7 @@ function startServer() {
   server.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
   });
-}
+}       
 
 if (module === require.main) {
   startServer();
