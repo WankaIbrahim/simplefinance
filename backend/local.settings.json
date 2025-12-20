@@ -6,6 +6,7 @@
     "AzureCosmosDBConnectionString": "AccountEndpoint=",
     "DatabaseName" : "",
     "DeploymentURL" : "",
-    "FunctionAppKey" : ""
+    "FunctionAppKey" : "",
+    "UserContainerName" : "user"
   }
 }
