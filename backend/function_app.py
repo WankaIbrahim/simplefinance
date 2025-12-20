@@ -107,8 +107,8 @@ def delete_user(req: func.HttpRequest)-> func.HttpResponse:
     username = req.params.get("username") # Passwords will be in the url but it doesn't matter too much
     password = req.params.get("password") # ^^^, we don't care too much right? Can always be changed to a json
     SQL = """
-            SELECT TOP 1 * 
-            FROM c
+            SELECT TOP 1 
+            FROM c.id
             WHERE c.username = @username
             AND c.password = @password
     """
