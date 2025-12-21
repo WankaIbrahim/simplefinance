@@ -7,18 +7,54 @@
 
 /* https://simplecss.org/demo */
 
-/* display.ejs */
-nav {
-    padding: 1rem;
-    text-align: center;
+.row{
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+a.fill-div {
+    /* display: block; */
+    height: 100%;
+    width: 100%;
+    color: white;
+    text-decoration: none;
+}
+.element{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background:rgb(105, 94, 94); 
+    width: 150px; 
+    min-height:200px; 
+    /* border-style: dashed;  */
+    border: 5px dashed black;
+    border-radius: 10px;
 }
 
+body {
+  min-height: 100vh;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+}
+
+/* footer.ejs */
 footer {
-    position: fixed;
+    /* position: fixed;
     left: 0;
     bottom: 0;
-    width: 100%;
+    width: 100%; */
+    min-height: 50px;
 }
+
 
 /* welcome.ejs */
 .welcome {

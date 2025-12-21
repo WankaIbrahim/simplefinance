@@ -1,0 +1,24 @@
+/* header.ejs */
+nav {
+    /* background: red; */
+    display: block;
+    background: rgb(49, 49, 49);
+    padding: 1rem;
+    text-align: center;
+    margin-bottom: 5rem;
+    width: 100%;
+    min-height: 50px;
+    /* max-height: 60px; */
+    height: 50px;
+    /* height: 50px; */
+}
+
+nav .logo {
+    /* font-size: 1.5rem; */
+    /* font-weight: bold;
+    font-family: 'Times New Roman', Times, serif; */
+    float: left;
+}
+nav .nav-menu {
+    float: right;
+}

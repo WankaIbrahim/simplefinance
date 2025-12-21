@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimpleFinance</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <link rel="stylesheet" href="/static/main.css">
+    <link rel="stylesheet" href="/static/header.css">
+    <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
+    <!-- <script src="/socket.io/socket.io.js"></script> -->
+</head>
+
+<body>
+    <%- include('header'); -%>
+    <div id="server">
+        <h1>Group: Office Furniture</h1>
+        <p>Members:</p>
+        <ul>
+            <li>Alice</li>
+            <li>Bob</li>
+            <li>Charlie</li>
+        </ul>
+
+        <h2>Shared Expenses</h2>
+        <table style="width: 100%;">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Payer</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="expense in expenses" :key="expense.id">
+                    <td>{{ expense.description }}</td>
+                    <td>{{ expense.amount }}</td>
+                    <td>{{ expense.payer }}</td>
+                    <td>{{ expense.date }}</td>
+                </tr>
+                
+            </tbody>
+        </table>
+
+        <h2>Add New Expense</h2>
+        <!-- <form id="expense-form"> -->
+            <label for="description">Description:</label><br>
+            <input type="text" id="description" name="description" v-model="item"><br>
+            <label for="amount">Amount:</label><br>
+            <input type="number" id="amount" name="amount" v-model="amount" step="0.01"><br>
+            <label for="payer">Payer:</label><br>
+            <select id="payer" name="payer" v-model="payer">
+                <option value="Alice">Alice</option>
+                <option value="Bob">Bob</option>
+                <option value="Charlie">Charlie</option>
+            </select><br><br>
+            <!-- <input type="submit" value="Add Expense"> -->
+             <button @click="newExpense" type="submit" class="btn btn-primary">Add Expense</button>
+        <!-- </form> -->
+
+    </div>
+    <%- include('footer'); -%>
+</body>
+
+
+<script src="/static/server.js"></script>
+
+</html>

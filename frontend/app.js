@@ -3,6 +3,7 @@
 const express = require('express');
 const app = express();
 const server = require('http').Server(app);
+const azureModel = require('./src/azureModel');
 const fetch = (...args) =>
   import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
@@ -20,13 +21,31 @@ app.get('/', (req, res) => {
 app.get('/display', (req, res) => {
     res.render('display');
 });
+app.get('/group-view', (req, res) => {
+    res.render('group-view');
+});
+
 
 app.post('/login', async (req, res) => {
     console.log('Login Request Received');
-    // const { username, password } = req.body;
-    // const result = await azureModel.login(username, password);
-    // res.json(result);
+    const { username, password } = req.body;
+    const result = await azureModel.login(username, password);
+    res.json(result);
 });
+app.post('/register', async (req, res) => {
+    console.log('Register Request Received');
+    const { username, password } = req.body;
+    const result = await azureModel.register(username, password);
+    res.json(result);
+});
+
+app.post('/newExpense', async (req, res) => {
+    console.log('New Expense Request');
+    const { item, amount, payer } = req.body;
+    // const result = await azureModel.newExpense(item, amount, payer);
+    res.json(result);
+});
+
 
 async function callAzureAPI(endpoint, method, body = null) {
   const url = `${BACKEND_ENDPOINT}${endpoint}`;
