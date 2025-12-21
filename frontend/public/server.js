@@ -57,8 +57,10 @@ var app = new Vue({
         },
         login() { this.request('/login'); },
         register() { this.request('/register'); },
+
         newExpense(){
             this.expenses.push({ description: this.item, amount: this.amount, payer: this.payer, date: new Date().toISOString().split('T')[0] });
+            // this will clear the form inputs
             this.item = '';
             this.amount = 0;
             this.payer = '';

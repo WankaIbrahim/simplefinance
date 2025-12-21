@@ -15,13 +15,18 @@ File Structure:
 -> public - additional vue logic
 --> game.js
 --> main.css
+--> header.css
 
 -> src - put all logic required for the front-end here
--->
+--> azureModel.js - connection and requests that will go to the Azure server go here
 
 -> views - put all html in here
---> login.ejs - currently the page for loging (localhost:8080/login)
---> welcome.ejs - currently the landing page (localhost:8080/)
+--> display.ejs - holds the login and welcome pages (localhost:8080/display)
+--> group-view.ejs - view for a spending group (localhost:8080/group-view)
+--> header.ejs - website header (nav menu) - imported on all pages
+--> footer.ejs - website footer - imported on all pages
+--> welcome.ejs - not used (localhost:8080/)
+--> login.ejs - not used
 
 -> app.js - server setup
 ```
