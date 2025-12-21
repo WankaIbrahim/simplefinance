@@ -11,13 +11,21 @@ const AZURE_API_KEY = process.env.AZURE_API_KEY || null;
 
 app.set('view engine', 'ejs');
 app.use('/static', express.static('public'));
-
-app.get('/login', (req, res) => {
-    res.render('login');
-});
+app.use(express.json());
 
 app.get('/', (req, res) => {
     res.render('welcome');
+});
+
+app.get('/display', (req, res) => {
+    res.render('display');
+});
+
+app.post('/login', async (req, res) => {
+    console.log('Login Request Received');
+    // const { username, password } = req.body;
+    // const result = await azureModel.login(username, password);
+    // res.json(result);
 });
 
 async function callAzureAPI(endpoint, method, body = null) {

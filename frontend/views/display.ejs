@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimpleFinance</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <link rel="stylesheet" href="/static/main.css">
+    <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
+    <!-- <script src="/socket.io/socket.io.js"></script> -->
+</head>
+
+<body>
+    <%- include('header'); -%>
+        <div id="server">
+            <div v-if="!loggedIn" style="display: grid;
+                                         place-items: center;
+                                         text-align: center;">
+
+                <div class="card-header bg-primary text-white text-center">
+                    <h2 class="mb-0" style="">SimpleFinance</h4>
+                </div>
+                <div class="card-body p-4">
+                    <h5 class="text-center mb-4 text-muted">User Credentials</h5>
+                    <div class="mb-3">
+                        <input type="text" v-model="inputUsername" class="form-control" placeholder="Username">
+                    </div>
+                    <div class="mb-3">
+                        <input type="password" v-model="inputPassword" class="form-control" placeholder="Password">
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button @click="login" class="btn btn-success flex-fill" style="width: 100%;">Sign in</button>
+                        <button @click="register" class="btn btn-outline-primary flex-fill" style="width: 100%;">Sign
+                            up</button>
+                    </div>
+                </div>
+            </div>
+
+            <div v-else>
+                <p>Hello {{inputUsername}}, your password is {{inputPassword}}</p>
+
+            </div>
+        </div>
+        <%- include('footer'); -%>
+</body>
+
+
+<script src="/static/server.js"></script>
+
+</html>

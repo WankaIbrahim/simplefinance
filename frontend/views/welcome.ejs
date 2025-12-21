@@ -1,11 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>SimpleFinance</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <link rel="stylesheet" href="/static/main.css">
+    <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
+    <!-- <script src="/socket.io/socket.io.js"></script> -->
 </head>
-<body>
-    <p>Hello world ?</p>
+
+<body class="welcome">
+    <%- include('header'); -%>
+        <h1>under construction - go test the <a href="/display">login</a> page</h1>
+        <div id="server">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif" alt="Welcome Image"
+                style="display: block; margin: 0 auto; max-width: 100%; height: auto;">
+
+        </div>
+
+        <%- include('footer'); -%>
 </body>
+
+
+<script src="/static/server.js"></script>
+
 </html>

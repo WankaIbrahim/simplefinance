@@ -4,7 +4,7 @@
   "description": "Cload Application Development Group Coursework",
   "main": "app.js",
   "engines": {
-    "node": "16.x"
+    "node": "20.x"
   },
   "scripts": {
     "start": "node app.js",
@@ -12,8 +12,8 @@
     "hdeploy": "git push heroku master"
   },
   "dependencies": {
-    "ejs": "^3.1.6",
-    "express": "^4.18.2",
+    "ejs": "^3.1.10",
+    "express": "^4.22.1",
     "node-fetch": "^3.3.0",
     "socket.io": "^4.3.1"
   }
