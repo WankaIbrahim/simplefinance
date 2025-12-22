@@ -1,0 +1,83 @@
+<%- include('header') %>
+
+<main class="settings-page">
+  <div class="settings-card">
+    <div class="settings-head">
+      <h1>Settings</h1>
+      <p class="muted">Manage your profile, security, and preferences.</p>
+    </div>
+
+    <section class="settings-section">
+      <div class="section-title">
+        <h2>Profile</h2>
+        <p class="muted">Basic account information.</p>
+      </div>
+
+      <div class="settings-grid">
+        <div class="field">
+          <label for="name">Name</label>
+          <input id="name" type="text" placeholder="Your full name" disabled />
+        </div>
+
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" placeholder="you@example.com" disabled />
+        </div>
+      </div>
+    </section>
+
+    <hr class="divider" />
+
+    <section class="settings-section">
+      <div class="section-title">
+        <h2>Security</h2>
+        <p class="muted">Password settings.</p>
+      </div>
+
+      <div class="settings-grid">
+        <div class="field">
+          <label>Password</label>
+          <button class="btn btn-secondary" disabled>
+            Change password
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <hr class="divider" />
+
+    <section class="settings-section">
+      <div class="section-title">
+        <h2>Preferences</h2>
+        <p class="muted">Customize your experience.</p>
+      </div>
+
+      <div class="settings-grid">
+        <div class="field toggle">
+          <label>
+            <input type="checkbox" disabled />
+            <span>Enable notifications</span>
+          </label>
+        </div>
+
+        <div class="field toggle">
+          <label>
+            <input type="checkbox" disabled />
+            <span>Dark mode</span>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <div class="settings-actions">
+      <button class="btn btn-primary" disabled>
+        Save changes
+      </button>
+      <button class="btn btn-danger" disabled>
+        Delete account
+      </button>
+    </div>
+  </div>
+</main>
+
+<%- include('footer') %>
