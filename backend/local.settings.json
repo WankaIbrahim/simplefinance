@@ -3,10 +3,11 @@
   "Values": {
     "FUNCTIONS_WORKER_RUNTIME": "python",
     "AzureWebJobsStorage": "",
-    "AzureCosmosDBConnectionString": "AccountEndpoint=",
-    "DatabaseName" : "",
-    "DeploymentURL" : "",
-    "FunctionAppKey" : "",
-    "UserContainerName" : "user"
+    "AzureCosmosDBConnectionString": "AccountEndpoint=https://iaw1e22-cosmos-db.documents.azure.com:443/;AccountKey=OmJOHxopBqJyCSOGc5a6L66GMQbATFd2lVDUIVNO27Usrh2lvtAzGw8BTq4g25iwKqip4DWPn47GACDbb8ynXA==;",
+    "DatabaseName" : "simplefinance",
+    "UserContainerName" : "users",
+    "GroupContainerName": "groups",
+    "DeploymentURL" : "simplefinance.azurewebsites.net",
+    "FunctionAppKey" : "jHMTQt3HujrD95gb7i8X1p5ovrH-yzStfSeLDHPLMiEnAzFuy3B_jQ=="
   }
 }
