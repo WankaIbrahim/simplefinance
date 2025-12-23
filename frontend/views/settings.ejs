@@ -1,83 +1,104 @@
-<%- include('header') %>
+<!DOCTYPE html>
+<html lang="en">
 
-<main class="settings-page">
-  <div class="settings-card">
-    <div class="settings-head">
-      <h1>Settings</h1>
-      <p class="muted">Manage your profile, security, and preferences.</p>
-    </div>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimpleFinance</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <link rel="stylesheet" href="/static/main.css">
+    <link rel="stylesheet" href="/static/header.css">
+    <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
+</head>
 
-    <section class="settings-section">
-      <div class="section-title">
-        <h2>Profile</h2>
-        <p class="muted">Basic account information.</p>
-      </div>
-
-      <div class="settings-grid">
-        <div class="field">
-          <label for="name">Name</label>
-          <input id="name" type="text" placeholder="Your full name" disabled />
+<body>
+  <div id="server">
+    <%- include('header') %>
+    <main class="settings-page">
+      <div class="settings-card">
+        <div class="settings-head">
+          <h1>Settings</h1>
+          <p class="muted">Manage your profile, security, and preferences.</p>
         </div>
 
-        <div class="field">
-          <label for="email">Email</label>
-          <input id="email" type="email" placeholder="you@example.com" disabled />
-        </div>
-      </div>
-    </section>
+        <section class="settings-section">
+          <div class="section-title">
+            <h2>Profile</h2>
+            <p class="muted">Basic account information.</p>
+          </div>
 
-    <hr class="divider" />
+          <div class="settings-grid">
+            <div class="field">
+              <label for="name">Name</label>
+              <input id="name" type="text" placeholder="John Doe" v-model="inputUsername"/>
+            </div>
 
-    <section class="settings-section">
-      <div class="section-title">
-        <h2>Security</h2>
-        <p class="muted">Password settings.</p>
-      </div>
+            <div class="field">
+              <label for="email">Email</label>
+              <input id="email" type="email" placeholder="you@example.com"/>
+            </div>
+          </div>
+        </section>
 
-      <div class="settings-grid">
-        <div class="field">
-          <label>Password</label>
-          <button class="btn btn-secondary" disabled>
-            Change password
+        <hr class="divider" />
+
+        <section class="settings-section">
+          <div class="section-title">
+            <h2>Security</h2>
+            <p class="muted">Password settings.</p>
+          </div>
+
+          <div class="settings-grid">
+            <div class="field">
+              <label>Password</label>
+              <button class="btn btn-secondary" >
+                Change password
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <hr class="divider" />
+
+        <section class="settings-section">
+          <div class="section-title">
+            <h2>Preferences</h2>
+            <p class="muted">Customize your experience.</p>
+          </div>
+
+          <div class="settings-grid">
+            <div class="field toggle">
+              <label>
+                <input type="checkbox"/>
+                <span>Enable notifications</span>
+              </label>
+            </div>
+
+            <div class="field toggle">
+              <label>
+                <input type="checkbox"/>
+                <span>Dark mode</span>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <div class="settings-actions">
+          <button class="btn btn-primary">
+            Save changes
+          </button>
+          <button class="btn btn-danger">
+            Delete account
           </button>
         </div>
       </div>
-    </section>
+    </main>
+</div>
+    <%- include('footer') %>
+</body>
+<script src="/static/server.js">
 
-    <hr class="divider" />
 
-    <section class="settings-section">
-      <div class="section-title">
-        <h2>Preferences</h2>
-        <p class="muted">Customize your experience.</p>
-      </div>
+</script>
 
-      <div class="settings-grid">
-        <div class="field toggle">
-          <label>
-            <input type="checkbox" disabled />
-            <span>Enable notifications</span>
-          </label>
-        </div>
-
-        <div class="field toggle">
-          <label>
-            <input type="checkbox" disabled />
-            <span>Dark mode</span>
-          </label>
-        </div>
-      </div>
-    </section>
-
-    <div class="settings-actions">
-      <button class="btn btn-primary" disabled>
-        Save changes
-      </button>
-      <button class="btn btn-danger" disabled>
-        Delete account
-      </button>
-    </div>
-  </div>
-</main>
-
-<%- include('footer') %>
+</html>

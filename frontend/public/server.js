@@ -14,6 +14,7 @@ var app = new Vue({
         scene: 0,
         inputUsername: '',
         inputPassword: '',
+        isAdmin: false,
 
         statusMessage: '',
         statusColor: 'red',
@@ -22,10 +23,18 @@ var app = new Vue({
         amount: 0,
         payer: '',
         expenses: [{ description: 'Office Chair', amount: 150, payer: 'Alice', date: '2024-06-01' },
-            { description: 'Monitor', amount: 350, payer: 'Bob', date: '2024-06-01' }
+        { description: 'Monitor', amount: 350, payer: 'Bob', date: '2024-06-01' }
         ]
     },
-
+    mounted() {
+        if (localStorage.getItem('loggedIn') === 'true') {
+            this.inputUsername = localStorage.getItem('username');
+            this.loggedIn = true;
+        }
+        if(this.inputUsername === 'test'){
+            this.isAdmin = true;
+        }
+    },
     computed: {
 
     },
@@ -40,6 +49,8 @@ var app = new Vue({
                 const data = await response.json();
                 if (endpoint === '/login') {
                     if (data.success) {
+                        localStorage.setItem('username', this.inputUsername);
+                        localStorage.setItem('loggedIn', 'true');
                         this.loggedIn = true;
                         this.scene = 1;
                     } else {
@@ -57,8 +68,16 @@ var app = new Vue({
         },
         login() { this.request('/login'); },
         register() { this.request('/register'); },
+        logout() {
+            localStorage.clear();
 
-        newExpense(){
+            this.loggedIn = false;
+            this.inputUsername = '';
+
+            window.location.href = '/display'; 
+            console.log("User logged out + " + this.inputUsername);
+        },
+        newExpense() {
             this.expenses.push({ description: this.item, amount: this.amount, payer: this.payer, date: new Date().toISOString().split('T')[0] });
             // this will clear the form inputs
             this.item = '';

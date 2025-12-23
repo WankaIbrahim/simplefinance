@@ -14,38 +14,42 @@
 
 <body>
     <%- include('header'); -%>
-    <div id="server">
-        <h1>Group: Office Furniture</h1>
-        <p>Members:</p>
-        <ul>
-            <li>Alice</li>
-            <li>Bob</li>
-            <li>Charlie</li>
-        </ul>
+        <div id="server">
+            <h1>Group: Office Furniture</h1>
+            <div>
+                <p>Members:</p>
+                <ul>
+                    <li>Alice</li>
+                    <li>Bob</li>
+                    <li>Charlie</li>
+                </ul>
+                <div v-if="isAdmin">
+                    <button @click="addMember" class="btn btn-primary">Add Member</button>
+                </div>
+            </div>
+            <h2>Shared Expenses</h2>
+            <table style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Amount</th>
+                        <th>Payer</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="expense in expenses" :key="expense.id">
+                        <td>{{ expense.description }}</td>
+                        <td>{{ expense.amount }}</td>
+                        <td>{{ expense.payer }}</td>
+                        <td>{{ expense.date }}</td>
+                    </tr>
 
-        <h2>Shared Expenses</h2>
-        <table style="width: 100%;">
-            <thead>
-                <tr>
-                    <th>Description</th>
-                    <th>Amount</th>
-                    <th>Payer</th>
-                    <th>Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="expense in expenses" :key="expense.id">
-                    <td>{{ expense.description }}</td>
-                    <td>{{ expense.amount }}</td>
-                    <td>{{ expense.payer }}</td>
-                    <td>{{ expense.date }}</td>
-                </tr>
-                
-            </tbody>
-        </table>
+                </tbody>
+            </table>
 
-        <h2>Add New Expense</h2>
-        <!-- <form id="expense-form"> -->
+            <h2>Add New Expense</h2>
+            <!-- <form id="expense-form"> -->
             <label for="description">Description:</label><br>
             <input type="text" id="description" name="description" v-model="item"><br>
             <label for="amount">Amount:</label><br>
@@ -57,11 +61,11 @@
                 <option value="Charlie">Charlie</option>
             </select><br><br>
             <!-- <input type="submit" value="Add Expense"> -->
-             <button @click="newExpense" type="submit" class="btn btn-primary">Add Expense</button>
-        <!-- </form> -->
+            <button @click="newExpense" type="submit" class="btn btn-primary">Add Expense</button>
+            <!-- </form> -->
 
-    </div>
-    <%- include('footer'); -%>
+        </div>
+        <%- include('footer'); -%>
 </body>
 
 

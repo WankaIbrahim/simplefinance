@@ -29,8 +29,6 @@ app.get("/settings", (req, res) => {
   res.render("settings");
 });
 
-
-
 app.post('/login', async (req, res) => {
     console.log('Login Request Received');
     const { username, password } = req.body;

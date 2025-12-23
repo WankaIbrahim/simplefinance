@@ -1,8 +1,7 @@
 <nav>
+    <div v-if="loggedIn" class="nav-container">
     <div class="logo">
         <a href="/" style="text-decoration: none;"> SimpleFinance</a>
-        <link rel="stylesheet" href="/static/main.css">
-
     </div>
     <div class="nav-menu">
         <a href="/">Home</a> |
@@ -10,6 +9,13 @@
         <a href="/">About</a> |
         <a href="/settings">Settings</a>
         <!-- <button>Sign in</button> -->
+        <button @click="logout" class="btn btn-success flex-fill">Sign out</button>
     </div>
-    
+    </div>
+
+    <div v-else class="nav-container">
+<div class="logo">
+        <a href="/" style="text-decoration: none;"> SimpleFinance</a>
+    </div>
+    </div>
 </nav>
