@@ -19,24 +19,139 @@ var app = new Vue({
         statusMessage: '',
         statusColor: 'red',
 
+        activeGroupIndex: 0, // Id of current group
+        sortBy: 'votes',
+        sortDesc: true,
+
+        activeGroup: null,
+        groups: [
+            {
+                id: 101,
+                owner: "Bob",
+                name: "Office Furniture 1",
+                members: ["Alice", "Bob", "test"],
+                items: [
+                    {
+                        id: 1,
+                        name: "Ergonomic Chairs",
+                        quantity: 4,
+                        price: 150.00,
+                        buyer: "Alice",
+                        votedBy: [],
+                        purchased: false
+                    },
+                    {
+                        id: 2,
+                        name: "Standing Desk",
+                        quantity: 1,
+                        price: 450.00,
+                        buyer: "Bob",
+                        votedBy: [],
+                        purchased: true // This one is already bought
+                    }
+                ]
+            },
+            {
+                id: 102,
+                admin: "Bob",
+                name: "Office Furniture 2",
+                members: ["Alice", "Bob","test"],
+                items: [
+                    {
+                        id: 1,
+                        name: "Ergonomic Chairs",
+                        quantity: 4,
+                        price: 150.00,
+                        buyer: "Alice",
+                        votedBy: [],
+                        purchased: false
+                    },
+                    {
+                        id: 2,
+                        name: "Standing Desk",
+                        quantity: 1,
+                        price: 450.00,
+                        buyer: "Bob",
+                        votedBy: [],
+                        purchased: true // This one is already bought
+                    }
+                ]
+            },
+            {
+                id: 103,
+                admin: "test",
+                name: "Kitchen Supplies (test)",
+                members: ["Alice", "Dave"],
+                items: [
+                    {
+                        id: 3,
+                        name: "Coffee Machine",
+                        quantity: 1,
+                        price: 80.00,
+                        buyer: "Dave",
+                        votedBy: [],
+                        purchased: false
+                    }
+                ]
+            },
+            {
+                id: 104,
+                admin: "test",
+                name: "Kitchen Supplies (test 2)",
+                members: ["Alice", "Dave"],
+                items: [
+                    {
+                        id: 3,
+                        name: "Coffee Machine",
+                        quantity: 1,
+                        price: 80.00,
+                        buyer: "Dave",
+                        votedBy: [],
+                        purchased: false
+                    }
+                ]
+            }
+        ],
         item: '',
-        amount: 0,
+        quantity: 0,
         payer: '',
-        expenses: [{ description: 'Office Chair', amount: 150, payer: 'Alice', date: '2024-06-01' },
-        { description: 'Monitor', amount: 350, payer: 'Bob', date: '2024-06-01' }
-        ]
+        price: 0.0
     },
     mounted() {
         if (localStorage.getItem('loggedIn') === 'true') {
             this.inputUsername = localStorage.getItem('username');
             this.loggedIn = true;
         }
-        if(this.inputUsername === 'test'){
+        if (this.inputUsername === 'test') {
             this.isAdmin = true;
         }
+        const urlParams = new URLSearchParams(window.location.search);
+        const groupId = urlParams.get('id');
+        if (groupId) {
+        // groupId is a string, g.id is a number
+        const foundGroup = this.groups.find(g => g.id == groupId);
+
+        if (foundGroup) {
+            this.activeGroup = foundGroup;
+            this.groupNotFound = false;
+        } else {
+            this.groupNotFound = true;
+        }
+    } else {
+        this.groupNotFound = true; 
+    }
     },
     computed: {
-
+        myGroups() {
+            return this.groups.filter(group => {
+                return group.admin === this.inputUsername;
+            });
+        },
+        membershipGroups() {
+            return this.groups.filter(group => {
+                return group.members.includes(this.inputUsername);
+            });
+        }
     },
     methods: {
         async request(endpoint) {
@@ -74,16 +189,34 @@ var app = new Vue({
             this.loggedIn = false;
             this.inputUsername = '';
 
-            window.location.href = '/display'; 
+            window.location.href = '/display';
             console.log("User logged out + " + this.inputUsername);
         },
         newExpense() {
-            this.expenses.push({ description: this.item, amount: this.amount, payer: this.payer, date: new Date().toISOString().split('T')[0] });
+
+            this.activeGroup.items.push(
+                {
+                    id: 3,
+                    name: this.item,
+                    quantity: this.quantity,
+                    price: this.price,
+                    buyer: this.payer,
+                    votedBy: [],
+                    purchased: false
+                }
+            );
+
             // this will clear the form inputs
             this.item = '';
-            this.amount = 0;
+            this.quantity = 0;
             this.payer = '';
+            this.price= 0.0;
+        },
+        upvote(item) {
+            if (!item.votedBy.includes(this.inputUsername)) {
+                item.votedBy.push(this.inputUsername);
+                item.votes = item.votedBy.length;
+            }
         }
-
     }
 });

@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SimpleFinance</title>
     <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <link rel="icon" type="image/x-icon" href="./favicon.ico">
     <link rel="stylesheet" href="/static/main.css">
     <link rel="stylesheet" href="/static/header.css">
     <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
@@ -13,62 +14,76 @@
 </head>
 
 <body>
-    <%- include('header'); -%>
-        <div id="server">
-            <h1>Group: Office Furniture</h1>
-            <div>
-                <p>Members:</p>
-                <ul>
-                    <li>Alice</li>
-                    <li>Bob</li>
-                    <li>Charlie</li>
-                </ul>
-                <div v-if="isAdmin">
-                    <button @click="addMember" class="btn btn-primary">Add Member</button>
-                </div>
+    <div id="server">
+        <%- include('header'); -%>
+
+            <div v-if="groupNotFound" style="text-align: center; margin-top: 50px;">
+                <h1>404</h1>
+                <h2>Group Not Found</h2>
+                <p>The group you are looking for does not exist or you do not have permission.</p>
+                <a href="/" class="btn btn-primary">Go Back Home</a>
             </div>
-            <h2>Shared Expenses</h2>
-            <table style="width: 100%;">
-                <thead>
-                    <tr>
-                        <th>Description</th>
-                        <th>Amount</th>
-                        <th>Payer</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="expense in expenses" :key="expense.id">
-                        <td>{{ expense.description }}</td>
-                        <td>{{ expense.amount }}</td>
-                        <td>{{ expense.payer }}</td>
-                        <td>{{ expense.date }}</td>
-                    </tr>
+            <div v-else-if="activeGroup">
+                <h1>Group: {{activeGroup.name}}</h1>
+                <div>
+                    <p>Members:</p>
+                    <ul>
+                        <li v-for="member in activeGroup.members" :key="member">{{ member }}</li>
+                    </ul>
+                    <div v-if="activeGroup.admin === inputUsername">
+                        <!-- @click="addMember" -->
+                        <button class="btn btn-primary">Add Member</button>
+                    </div>
+                </div>
+                <h2>Shared Expenses</h2>
+                <table style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Price</th>
+                            <th>Buyer</th>
+                            <th>quantity</th>
+                            <th>Total</th>
+                            <th>Votes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="expense in activeGroup.items">
+                            <td>{{ expense.name }}</td>
+                            <td>£{{ expense.price }}</td>
+                            <td>{{ expense.buyer }}</td>
+                            <td>{{ expense.quantity }}</td>
+                            <td>£{{ expense.price * expense.quantity }}</td>
+                            <td>{{ expense.votedBy.length }}<button @click="upvote(expense)"
+                                    :disabled="expense.votedBy.includes(inputUsername)">Upvote</button></td>
+                        </tr>
 
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
 
-            <h2>Add New Expense</h2>
-            <!-- <form id="expense-form"> -->
-            <label for="description">Description:</label><br>
-            <input type="text" id="description" name="description" v-model="item"><br>
-            <label for="amount">Amount:</label><br>
-            <input type="number" id="amount" name="amount" v-model="amount" step="0.01"><br>
-            <label for="payer">Payer:</label><br>
-            <select id="payer" name="payer" v-model="payer">
-                <option value="Alice">Alice</option>
-                <option value="Bob">Bob</option>
-                <option value="Charlie">Charlie</option>
-            </select><br><br>
-            <!-- <input type="submit" value="Add Expense"> -->
-            <button @click="newExpense" type="submit" class="btn btn-primary">Add Expense</button>
-            <!-- </form> -->
+                <h2>Add New Expense</h2>
+                <!-- <form id="expense-form"> -->
+                <label for="description">Description:</label><br>
+                <input type="text" id="description" name="description" v-model="item"><br>
+                <label for="amount">Quantity:</label><br>
+                <input type="number" id="quantity" name="amount" v-model="quantity" step="0.01"><br>
+                <label for="price">Price:</label><br>
+                <input type="number" id="price" name="price" v-model="price"><br>
+                <label for="payer">Payer:</label><br>
+                <select id="payer" name="payer" v-model="payer">
+                    <option v-for="member in activeGroup.members" :key="member">{{ member }}</option>
+                </select><br><br>
+                <!-- <input type="submit" value="Add Expense"> -->
+                <button @click="newExpense" class="btn btn-primary">Add Expense</button>
+                <!-- </form> -->
 
-        </div>
-        <%- include('footer'); -%>
+            </div>
+            <div v-else>
+                <p>Loading...</p>
+            </div>
+    </div>
+    <%- include('footer'); -%>
 </body>
-
-
 <script src="/static/server.js"></script>
 
 </html>

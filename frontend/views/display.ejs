@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="/static/main.css">
     <link rel="stylesheet" href="/static/header.css">
     <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
+    <link rel="icon" type="image/x-icon" href="./favicon.ico">
 
     <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"> -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
@@ -55,13 +56,43 @@
                         <h2>Personal Groups</h2>
                         <div class="row">
 
-                            <div class="element" style="border: 5px solid black;">
-                                <a href="/group-view" class="fill-div">Office Furniture</a>
-
-
+                            <div class="element" v-for="group in myGroups" :key="group.id" style="border: 5px solid black;">
+                                <a :href="'/group-view?id=' + group.id" class="fill-div" >{{ group.name }}</a>
                             </div>
                             <div class="element">
-                                <p>Create your first group!</p>
+                                <div v-if="myGroups.length === 0" style="text-align: center;">
+                                    <p>Create your first group!</p>
+                                </div>
+                                <div v-else style="text-align: center;">
+                                    <p>Create a new group!</p>
+                                </div>
+                                <div style="font-size:2.5em; 
+                                            display: flex;
+                                            flex-direction: column;
+                                            align-items: center;
+                                            justify-content: center;
+                                            width: 100px;
+                                            height: 100px;
+                                            border: 3px dashed black; 
+                                            border-radius: 50px; 
+                                            margin: 5px;
+                                            ">
+                                    +
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+
+                    <div class="other-groups">
+                        <h2>Other Groups</h2>
+                        <div class="row">
+
+                            <div class="element" v-for="group in membershipGroups" :key="group.id" style="border: 5px solid black;">
+                                <a :href="'/group-view?id=' + group.id" class="fill-div" >{{ group.name }}</a>
+                            </div>
+                            <div class="element">
+                                <p>Join other groups!</p>
                                 <div style="font-size:2.5em; 
                                             display: flex;
                                             flex-direction: column;
