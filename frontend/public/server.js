@@ -56,7 +56,7 @@ var app = new Vue({
                         price: 450.00,
                         buyer: "Bob",
                         votedBy: [],
-                        purchased: true // This one is already bought
+                        purchased: true
                     }
                 ]
             },
@@ -82,7 +82,7 @@ var app = new Vue({
                         price: 450.00,
                         buyer: "Bob",
                         votedBy: [],
-                        purchased: true // This one is already bought
+                        purchased: true
                     }
                 ]
             },
