@@ -9,14 +9,16 @@
     <link rel="icon" type="image/x-icon" href="./favicon.ico">
     <link rel="stylesheet" href="/static/main.css">
     <link rel="stylesheet" href="/static/header.css">
+    <link rel="stylesheet" href="/static/footer.css">
     <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
     <!-- <script src="/socket.io/socket.io.js"></script> -->
+
 </head>
 
 <body>
     <div id="server">
         <%- include('header'); -%>
-
+        <main>
             <div v-if="groupNotFound" style="text-align: center; margin-top: 50px;">
                 <h1>404</h1>
                 <h2>Group Not Found</h2>
@@ -28,7 +30,8 @@
                 <div>
                     <p>Members:</p>
                     <ul>
-                        <li v-for="member in activeGroup.members" :key="member">{{ member }}</li>
+                        <li v-for="member in activeGroup.members" :key="member"><a
+                                :href="'/profile?username=' + member">{{ member }}</a></li>
                     </ul>
                     <div v-if="activeGroup.admin === inputUsername">
                         <!-- @click="addMember" -->
@@ -36,7 +39,7 @@
                     </div>
                 </div>
                 <h2>Shared Expenses</h2>
-                <table style="width: 100%;">
+                <table style="width: 100%;" @keydown.esc="showExpenseModal = false">
                     <thead>
                         <tr>
                             <th>Description</th>
@@ -54,33 +57,49 @@
                             <td>{{ expense.buyer }}</td>
                             <td>{{ expense.quantity }}</td>
                             <td>£{{ expense.price * expense.quantity }}</td>
-                            <td>{{ expense.votedBy.length }}<button @click="upvote(expense)"
-                                    :disabled="expense.votedBy.includes(inputUsername)">Upvote</button></td>
+                            <td>{{ expense.votedBy.length }}
+                                <button @click="upvote(expense)"
+                                    v-if="!expense.votedBy.includes(inputUsername)">Upvote</button>
+                                <button @click="downvote(expense)" v-if="expense.votedBy.includes(inputUsername)"
+                                    id="myBtn">Downvote</button>
+                            </td>
                         </tr>
-
+                        <tr style="text-align: center;">
+                            <td colspan="6"><button style="text-align: center; width: 100%;"
+                                    @click="showExpenseModal = true">Add new Expense</button>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
 
-                <h2>Add New Expense</h2>
-                <!-- <form id="expense-form"> -->
-                <label for="description">Description:</label><br>
-                <input type="text" id="description" name="description" v-model="item"><br>
-                <label for="amount">Quantity:</label><br>
-                <input type="number" id="quantity" name="amount" v-model="quantity" step="0.01"><br>
-                <label for="price">Price:</label><br>
-                <input type="number" id="price" name="price" v-model="price"><br>
-                <label for="payer">Payer:</label><br>
-                <select id="payer" name="payer" v-model="payer">
-                    <option v-for="member in activeGroup.members" :key="member">{{ member }}</option>
-                </select><br><br>
-                <!-- <input type="submit" value="Add Expense"> -->
-                <button @click="newExpense" class="btn btn-primary">Add Expense</button>
-                <!-- </form> -->
+                <div class="modal-overlay" v-if="showExpenseModal" @click.self="showExpenseModal = false" @keydown.esc="showExpenseModal = false">
+
+                    <div class="modal-card" @keydown.esc="showExpenseModal = false">
+                        <h2>Add New Expense</h2>
+                        <!-- <form id="expense-form"> -->
+                        <label for="description">Description:</label><br>
+                        <input type="text" id="description" name="description" v-model="item"><br>
+                        <label for="quantity">Quantity:</label><br>
+                        <input type="number" id="quantity" name="quantity" v-model="quantity" step="0.01"><br>
+                        <label for="price">Price:</label><br>
+                        <input type="number" id="price" name="price" v-model="price"><br>
+                        <label for="payer">Payer:</label><br>
+                        <select id="payer" name="payer" v-model="payer">
+                            <option v-for="member in activeGroup.members" :key="member">{{ member }}</option>
+                        </select><br><br>
+
+                        <div class="modal-actions">
+                            <button @click="newExpense(); showExpenseModal = false;" class="btn btn-success">Add</button>
+                            <button @click="showExpenseModal = false" class="btn btn-danger">Cancel</button>
+                        </div>
+                    </div>
+                </div>
 
             </div>
             <div v-else>
                 <p>Loading...</p>
             </div>
+        </main>
     </div>
     <%- include('footer'); -%>
 </body>

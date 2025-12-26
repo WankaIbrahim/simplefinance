@@ -23,6 +23,15 @@ var app = new Vue({
         sortBy: 'votes',
         sortDesc: true,
 
+        userId: null,
+        users: [{ id: 1, username: 'Alice' },
+        { id: 2, username: 'Bob' },
+        { id: 3, username: 'Dave' },
+        { id: 4, username: 'test' }],
+        searchUseraname: '',
+        searchUserId: null,
+        groupNotFound: false,
+
         activeGroup: null,
         groups: [
             {
@@ -55,7 +64,7 @@ var app = new Vue({
                 id: 102,
                 admin: "Bob",
                 name: "Office Furniture 2",
-                members: ["Alice", "Bob","test"],
+                members: ["Alice", "Bob", "test"],
                 items: [
                     {
                         id: 1,
@@ -115,11 +124,17 @@ var app = new Vue({
         item: '',
         quantity: 0,
         payer: '',
-        price: 0.0
+        price: 0.0,
+        groupDescription: '',
+
+
+        showExpenseModal: false,
+        lightTheme: false
     },
     mounted() {
         if (localStorage.getItem('loggedIn') === 'true') {
             this.inputUsername = localStorage.getItem('username');
+            this.userId = this.users.find(user => user.username === this.inputUsername)?.id || null;
             this.loggedIn = true;
         }
         if (this.inputUsername === 'test') {
@@ -128,18 +143,24 @@ var app = new Vue({
         const urlParams = new URLSearchParams(window.location.search);
         const groupId = urlParams.get('id');
         if (groupId) {
-        // groupId is a string, g.id is a number
-        const foundGroup = this.groups.find(g => g.id == groupId);
+            // groupId is a string, g.id is a number
+            const foundGroup = this.groups.find(g => g.id == groupId);
 
-        if (foundGroup) {
-            this.activeGroup = foundGroup;
-            this.groupNotFound = false;
+            if (foundGroup) {
+                this.activeGroup = foundGroup;
+                this.groupNotFound = false;
+            } else {
+                this.groupNotFound = true;
+            }
         } else {
             this.groupNotFound = true;
         }
-    } else {
-        this.groupNotFound = true; 
-    }
+
+        const profileID = urlParams.get('username');
+        if (profileID) {
+            this.searchUsername = profileID;
+            this.searchUserId = this.users.find(user => user.username === this.searchUsername)?.id || null;
+        }
     },
     computed: {
         myGroups() {
@@ -167,7 +188,6 @@ var app = new Vue({
                         localStorage.setItem('username', this.inputUsername);
                         localStorage.setItem('loggedIn', 'true');
                         this.loggedIn = true;
-                        this.scene = 1;
                     } else {
                         this.statusMessage = data.message;
                         this.statusColor = 'red';
@@ -181,7 +201,9 @@ var app = new Vue({
                 console.error('Error:', error);
             }
         },
-        login() { this.request('/login'); },
+        login() {
+            this.request('/login');
+        },
         register() { this.request('/register'); },
         logout() {
             localStorage.clear();
@@ -210,13 +232,23 @@ var app = new Vue({
             this.item = '';
             this.quantity = 0;
             this.payer = '';
-            this.price= 0.0;
+            this.price = 0.0;
         },
         upvote(item) {
             if (!item.votedBy.includes(this.inputUsername)) {
                 item.votedBy.push(this.inputUsername);
                 item.votes = item.votedBy.length;
             }
+        },
+        downvote(item) {
+            const index = item.votedBy.indexOf(this.inputUsername);
+            if (index !== -1) {
+                item.votedBy.splice(index, 1);
+                item.votes = item.votedBy.length;
+            }
+        },
+        toggleTheme() {
+            this.lightTheme = !this.lightTheme;
         }
     }
 });

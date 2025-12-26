@@ -31,9 +31,9 @@
                     </ul>
                 </aside>
 
-                <main class="content">
+                <main class="content" style="display:block; justify-content: center;">
 
-                    <div v-if="!loggedIn" style="display: grid;
+                    <div class="login" v-if="!loggedIn" style="display: grid;
                                          place-items: center;
                                          text-align: center;">
 
@@ -53,7 +53,7 @@
                                 :style="{ color: statusColor }" style="padding:5px;">
                                 {{ statusMessage }}
                             </div>
-                            <div class="d-flex gap-2">
+                            <div class="d-flex gap-10">
                                 <button @click="login" class="btn btn-success flex-fill" style="width: 100%;">Sign
                                     in</button>
                                 <button @click="register" class="btn btn-outline-primary flex-fill"
@@ -65,6 +65,8 @@
                     </div>
 
                     <div v-else>
+
+
                         <p>Hello {{inputUsername}}, ready to make budgets?</p>
                         <hr>
                         <!-- <aside>
@@ -143,7 +145,6 @@
                         </div>
                     </div>
                 </main>
-
                 <aside class="sidebar-right">
                     <div class="card">
                         <h3>Announcements</h3>
@@ -157,6 +158,7 @@
                         </ul>
                     </div>
                 </aside>
+
             </div>
     </div>
     <%- include('footer'); -%>

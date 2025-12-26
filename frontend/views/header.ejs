@@ -7,9 +7,12 @@
         <a href="/">Home</a> |
         <a href="/display">Dashboard</a> |
         <a href="/">About</a> |
-        <a href="/settings">Settings</a>
+        <a href="/settings">Settings</a> |
+        <a :href="'/profile?username=' + inputUsername">Profile</a>
         <!-- <button>Sign in</button> -->
         <button @click="logout" class="nav-logout">Sign out</button>
+        <button @click="lightTheme = !lightTheme" v-if="lightTheme">Light Theme</button>
+        <button @click="lightTheme = !lightTheme" v-if="!lightTheme">Dark Theme</button>
     </div>
     </div>
 

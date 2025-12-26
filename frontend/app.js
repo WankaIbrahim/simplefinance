@@ -24,7 +24,9 @@ app.get('/display', (req, res) => {
 app.get('/group-view', (req, res) => {
     res.render('group-view');
 });
-
+app.get('/profile', (req, res) => {
+    res.render('profile');
+});
 app.get("/settings", (req, res) => {
   res.render("settings");
 });
