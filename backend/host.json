@@ -8,10 +8,6 @@
       }
     }
   },
-  "extensionBundle": {
-    "id": "Microsoft.Azure.Functions.ExtensionBundle",
-    "version": "[4.26.2, 4.26.3)"
-  },
   "extensions": {
     "http": {
       "routePrefix": ""
