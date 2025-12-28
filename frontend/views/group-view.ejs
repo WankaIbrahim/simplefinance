@@ -31,7 +31,7 @@
                     <p>Members:</p>
                     <ul>
                         <li v-for="member in activeGroup.members" :key="member"><a
-                                :href="'/profile?username=' + member">{{ member }}</a></li>
+                                :href="'/profile?userId=' + member">{{ member.userId }}</a></li>
                     </ul>
                     <div v-if="activeGroup.admin === inputUsername">
                         <!-- @click="addMember" -->

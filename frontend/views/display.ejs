@@ -79,7 +79,7 @@
 
                                     <div class="element" v-for="group in myGroups" :key="group.id"
                                         style="border: 5px solid black;">
-                                        <a :href="'/group-view?id=' + group.id" class="fill-div">{{ group.name }}</a>
+                                        <a :href="'/group-view?groupId=' + group.id" class="fill-div">{{ group.name }}</a>
                                     </div>
                                     <div class="element">
                                         <div v-if="myGroups.length === 0" style="text-align: center;">
@@ -112,7 +112,7 @@
 
                                     <div class="element" v-for="group in membershipGroups" :key="group.id"
                                         style="border: 5px solid black;">
-                                        <a :href="'/group-view?id=' + group.id" class="fill-div">{{ group.name }}</a>
+                                        <a :href="'/group-view?groupId=' + group.id" class="fill-div">{{ group.name }}</a>
                                     </div>
                                     <div class="element">
                                         <p>Join other groups!</p>

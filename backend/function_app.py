@@ -50,7 +50,7 @@ def login_user(req: func.HttpRequest) -> func.HttpResponse:
         logging.info(f"Login attempt for username={username}")
 
         items = list(UserContainerProxy.query_items(
-            query="SELECT TOP 1 c.id FROM c WHERE c.username = @username AND c.password = @password",
+            query="SELECT TOP 1 * FROM c WHERE c.username = @username AND c.password = @password",
             parameters=[
                 {"name": "@username", "value": username},
                 {"name": "@password", "value": password}
@@ -67,10 +67,15 @@ def login_user(req: func.HttpRequest) -> func.HttpResponse:
             )
             
         return func.HttpResponse(
-                json.dumps({"result": True, "msg": "OK"}),
-                status_code=200,
-                mimetype="application/json"
-            )
+            json.dumps({
+                "result": True, 
+                "msg": "OK",
+                "userId": user["id"],       
+                "username": user["username"] 
+            }),
+            status_code=200,
+            mimetype="application/json"
+        )
     except Exception as e:
         return func.HttpResponse(
             json.dumps({"result": False, "msg": str(e)}),
@@ -533,6 +538,109 @@ def get_group(req: func.HttpRequest) -> func.HttpResponse:
 
         return func.HttpResponse(
             json.dumps({"result": True, "group": group}),
+            status_code=200,
+            mimetype="application/json"
+        )
+    except Exception as e:
+        return func.HttpResponse(
+            json.dumps({"result": False, "msg": str(e)}),
+            status_code=400,
+            mimetype="application/json"
+        )
+    
+
+# helper function to get all groups where a user is an admin
+# from Nikola
+@app.route(route="group/list/admin", methods=[func.HttpMethod.GET], auth_level=func.AuthLevel.FUNCTION)
+def get_groups_by_admin(req: func.HttpRequest) -> func.HttpResponse:
+    try:
+        username = req.params.get("username")
+        
+        if not username:
+             return func.HttpResponse(
+                json.dumps({"result": False, "msg": "username is required"}),
+                status_code=400,
+                mimetype="application/json"
+            )
+
+        logging.info(f"Searching for groups where admin is: {username}")
+
+        items = list(GroupContainerProxy.query_items(
+            query="SELECT * FROM c WHERE ARRAY_CONTAINS(c.admins, {'username': @username}, true)",
+            parameters=[{"name": "@username", "value": username}],
+            enable_cross_partition_query=True
+        ))
+
+        return func.HttpResponse(
+            json.dumps({"result": True, "groups": items}),
+            status_code=200,
+            mimetype="application/json"
+        )
+    except Exception as e:
+        return func.HttpResponse(
+            json.dumps({"result": False, "msg": str(e)}),
+            status_code=400,
+            mimetype="application/json"
+        )
+    
+    # some helper functions
+    # from Nikola
+@app.route(route="group/list/member", methods=[func.HttpMethod.GET], auth_level=func.AuthLevel.FUNCTION)
+def get_groups_by_member(req: func.HttpRequest) -> func.HttpResponse:
+    username = req.params.get("username")
+    if not username: return func.HttpResponse(json.dumps({"result": False}), status_code=400)
+
+    items = list(GroupContainerProxy.query_items(
+        query="SELECT * FROM c WHERE ARRAY_CONTAINS(c.users, {'username': @username}, true)",
+        parameters=[{"name": "@username", "value": username}],
+        enable_cross_partition_query=True
+    ))
+
+    return func.HttpResponse(json.dumps({"result": True, "groups": items}), status_code=200, mimetype="application/json")
+
+@app.route(route="group/list/guest", methods=[func.HttpMethod.GET], auth_level=func.AuthLevel.FUNCTION)
+def get_groups_by_guest(req: func.HttpRequest) -> func.HttpResponse:
+    username = req.params.get("username")
+    if not username: return func.HttpResponse(json.dumps({"result": False}), status_code=400)
+
+    items = list(GroupContainerProxy.query_items(
+        query="SELECT * FROM c WHERE ARRAY_CONTAINS(c.guests, {'username': @username}, true)",
+        parameters=[{"name": "@username", "value": username}],
+        enable_cross_partition_query=True
+    ))
+
+    return func.HttpResponse(json.dumps({"result": True, "groups": items}), status_code=200, mimetype="application/json")
+    
+@app.route(route="user/get/username", methods=[func.HttpMethod.GET], auth_level=func.AuthLevel.FUNCTION)    
+def get_user_by_name(req: func.HttpRequest) -> func.HttpResponse:
+    try:
+        username = req.params.get("username")
+        logging.info(f"Request to get user by name: {username}")
+
+        if not username:
+            return func.HttpResponse(
+                json.dumps({"result": False, "msg": "Username is required"}),
+                status_code=400,
+                mimetype="application/json"
+            )
+
+        items = list(UserContainerProxy.query_items(
+            query="SELECT * FROM c WHERE c.username = @username",
+            parameters=[{"name": "@username", "value": username}],
+            partition_key=username 
+        ))
+        
+        user = items[0] if items else None
+
+        if not user:
+            return func.HttpResponse(
+                json.dumps({"result": False, "msg": "User does not exist"}),
+                status_code=404,
+                mimetype="application/json"
+            )
+
+        return func.HttpResponse(
+            json.dumps({"result": True, "user": user}),
             status_code=200,
             mimetype="application/json"
         )

@@ -28,99 +28,13 @@ var app = new Vue({
         { id: 2, username: 'Bob' },
         { id: 3, username: 'Dave' },
         { id: 4, username: 'test' }],
-        searchUseraname: '',
+        searchUsername: '',
         searchUserId: null,
         groupNotFound: false,
 
         activeGroup: null,
-        groups: [
-            {
-                id: 101,
-                owner: "Bob",
-                name: "Office Furniture 1",
-                members: ["Alice", "Bob", "test"],
-                items: [
-                    {
-                        id: 1,
-                        name: "Ergonomic Chairs",
-                        quantity: 4,
-                        price: 150.00,
-                        buyer: "Alice",
-                        votedBy: [],
-                        purchased: false
-                    },
-                    {
-                        id: 2,
-                        name: "Standing Desk",
-                        quantity: 1,
-                        price: 450.00,
-                        buyer: "Bob",
-                        votedBy: [],
-                        purchased: true
-                    }
-                ]
-            },
-            {
-                id: 102,
-                admin: "Bob",
-                name: "Office Furniture 2",
-                members: ["Alice", "Bob", "test"],
-                items: [
-                    {
-                        id: 1,
-                        name: "Ergonomic Chairs",
-                        quantity: 4,
-                        price: 150.00,
-                        buyer: "Alice",
-                        votedBy: [],
-                        purchased: false
-                    },
-                    {
-                        id: 2,
-                        name: "Standing Desk",
-                        quantity: 1,
-                        price: 450.00,
-                        buyer: "Bob",
-                        votedBy: [],
-                        purchased: true
-                    }
-                ]
-            },
-            {
-                id: 103,
-                admin: "test",
-                name: "Kitchen Supplies (test)",
-                members: ["Alice", "Dave"],
-                items: [
-                    {
-                        id: 3,
-                        name: "Coffee Machine",
-                        quantity: 1,
-                        price: 80.00,
-                        buyer: "Dave",
-                        votedBy: [],
-                        purchased: false
-                    }
-                ]
-            },
-            {
-                id: 104,
-                admin: "test",
-                name: "Kitchen Supplies (test 2)",
-                members: ["Alice", "Dave"],
-                items: [
-                    {
-                        id: 3,
-                        name: "Coffee Machine",
-                        quantity: 1,
-                        price: 80.00,
-                        buyer: "Dave",
-                        votedBy: [],
-                        purchased: false
-                    }
-                ]
-            }
-        ],
+        groups: [],
+        groupMembers: [],
         item: '',
         quantity: 0,
         payer: '',
@@ -129,48 +43,59 @@ var app = new Vue({
 
 
         showExpenseModal: false,
-        lightTheme: false
+        lightTheme: false,
     },
     mounted() {
         if (localStorage.getItem('loggedIn') === 'true') {
             this.inputUsername = localStorage.getItem('username');
-            this.userId = this.users.find(user => user.username === this.inputUsername)?.id || null;
+            this.userId = localStorage.getItem('userId');
             this.loggedIn = true;
-        }
-        if (this.inputUsername === 'test') {
-            this.isAdmin = true;
-        }
-        const urlParams = new URLSearchParams(window.location.search);
-        const groupId = urlParams.get('id');
-        if (groupId) {
-            // groupId is a string, g.id is a number
-            const foundGroup = this.groups.find(g => g.id == groupId);
-
-            if (foundGroup) {
-                this.activeGroup = foundGroup;
-                this.groupNotFound = false;
-            } else {
-                this.groupNotFound = true;
+            if (window.location.pathname === '/display' || window.location.pathname === '/') {
+                this.fetchMyGroups();
+                this.fetchMembershipGroups();
             }
-        } else {
-            this.groupNotFound = true;
         }
 
-        const profileID = urlParams.get('username');
-        if (profileID) {
-            this.searchUsername = profileID;
-            this.searchUserId = this.users.find(user => user.username === this.searchUsername)?.id || null;
+        const urlParams = new URLSearchParams(window.location.search);
+
+        // load a group view
+        const groupId = urlParams.get('groupId');
+        if (groupId) {
+            this.fetchGroupDetails(groupId);
         }
+
+        // load a profile view
+        const profileId = urlParams.get('userId');
+        if (profileId) {
+            this.fetchUserProfile(profileId);
+        } else if (window.location.pathname === '/profile' && this.userId) {
+            // If on profile page but no ID in URL, load MY profile
+            this.fetchUserProfile(this.userId);
+        }
+
+
     },
     computed: {
         myGroups() {
             return this.groups.filter(group => {
-                return group.admin === this.inputUsername;
+                if (group.admins && Array.isArray(group.admins)) {
+                    return group.admins.some(admin => admin.username === this.inputUsername);
+                }
+                return false;
             });
         },
+
         membershipGroups() {
             return this.groups.filter(group => {
-                return group.members.includes(this.inputUsername);
+                const inUsers = group.users && Array.isArray(group.users) &&
+                    group.users.some(u => u.username === this.inputUsername);
+
+                // const inGuests = group.guests && Array.isArray(group.guests) &&
+                //     group.guests.some(g => g.username === this.inputUsername);
+
+                if (inUsers) return true;
+
+                return false;
             });
         }
     },
@@ -183,27 +108,38 @@ var app = new Vue({
                     body: JSON.stringify({ username: this.inputUsername, password: this.inputPassword })
                 });
                 const data = await response.json();
-                if (endpoint === '/login') {
-                    if (data.success) {
-                        localStorage.setItem('username', this.inputUsername);
+
+                if (data.result === true) {
+                    if (endpoint === '/login') {
+                        localStorage.setItem('username', data.username); // Use server data
+                        localStorage.setItem('userId', data.userId);     // SAVE ID HERE
                         localStorage.setItem('loggedIn', 'true');
+
+                        this.inputUsername = data.username;
+                        this.userId = data.userId;
                         this.loggedIn = true;
+
+                        // Redirect to home if needed, or fetch data
+                        if (window.location.pathname === '/display') {
+                            this.fetchMyGroups();
+                            this.fetchMembershipGroups();
+                        }
                     } else {
-                        this.statusMessage = data.message;
-                        this.statusColor = 'red';
+                        // Register logic...
+                        this.statusMessage = 'Registration successful';
+                        this.statusColor = 'green';
                     }
                 } else {
-                    this.statusMessage = data.message;
-                    this.statusColor = 'green';
+                    this.statusMessage = data.msg;
+                    this.statusColor = 'red';
                 }
-                console.log(endpoint + " request sent from " + this.inputUsername);
             } catch (error) {
                 console.error('Error:', error);
+                this.statusMessage = 'Connection failed';
             }
+
         },
-        login() {
-            this.request('/login');
-        },
+        login() { this.request('/login'); },
         register() { this.request('/register'); },
         logout() {
             localStorage.clear();
@@ -234,6 +170,49 @@ var app = new Vue({
             this.payer = '';
             this.price = 0.0;
         },
+        async fetchGroupDetails(id) {
+            try {
+                const response = await fetch('/get-group-details', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ groupId: id })
+                });
+                const data = await response.json();
+
+                if (data.result && data.group) {
+                    this.activeGroup = data.group;
+                    this.groupNotFound = false;
+                } else {
+                    this.groupNotFound = true;
+                }
+            } catch (error) {
+                console.error("Error loading group:", error);
+                this.groupNotFound = true;
+            }
+        },
+
+        // NEW: Fetch user profile details
+        async fetchUserProfile(id) {
+            try {
+                const response = await fetch('/get-user-details', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: id })
+                });
+                const data = await response.json();
+
+                if (data.result && data.user) {
+                    // You might want a new data property for 'viewedProfile' 
+                    // instead of overwriting 'users' array
+                    this.searchUsername = data.user.username;
+                    this.searchUserId = data.user.id;
+                    // Store the full object if you want to display email/bio
+                    // this.viewedProfile = data.user; 
+                }
+            } catch (error) {
+                console.error("Error loading profile:", error);
+            }
+        },
         upvote(item) {
             if (!item.votedBy.includes(this.inputUsername)) {
                 item.votedBy.push(this.inputUsername);
@@ -249,6 +228,55 @@ var app = new Vue({
         },
         toggleTheme() {
             this.lightTheme = !this.lightTheme;
-        }
+        },
+        async fetchMyGroups() {
+            if (!this.inputUsername) return;
+
+            try {
+                const response = await fetch('/my-groups', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: this.inputUsername })
+                });
+                const data = await response.json();
+
+                if (data.result && data.groups) {
+                    data.groups.forEach(serverGroup => {
+                        const exists = this.groups.find(g => g.id === serverGroup.id);
+                        if (!exists) {
+                            this.groups.push(serverGroup);
+                        }
+                    });
+                }
+                // console.log(groups + " fetched for user " + this.inputUsername);
+            } catch (error) {
+                console.error("Error fetching groups:", error);
+            }
+        },
+        //
+        //
+        async fetchMembershipGroups() {
+            if (!this.inputUsername) return;
+            try {
+                const response = await fetch('/membership-groups', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: this.inputUsername })
+                });
+                const data = await response.json();
+
+                if (data.result && data.groups) {
+                    data.groups.forEach(serverGroup => {
+                        // FIX: Check against the main 'groups' array, not the computed property
+                        const exists = this.groups.find(g => g.id === serverGroup.id);
+                        if (!exists) {
+                            this.groups.push(serverGroup);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error("Error fetching groups:", error);
+            }
+        },
     }
 });

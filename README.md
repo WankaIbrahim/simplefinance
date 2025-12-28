@@ -31,7 +31,15 @@ File Structure:
 -> app.js - server setup
 ```
 
-To run the back-end server: need to setup azure
+To run the back-end server:
+```
+pip install -r requirements.txt
+```
+then
+```
+func start
+```
+
 
 To run the front-end server:
 ```

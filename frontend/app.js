@@ -31,6 +31,42 @@ app.get("/settings", (req, res) => {
   res.render("settings");
 });
 
+
+app.post('/my-groups', async (req, res) => {
+    console.log('Fetching admin groups for user:', req.body.username);
+    const { username } = req.body;
+    const result = await azureModel.getGroupsByAdmin(username);
+    res.json(result);
+});
+
+app.post('/membership-groups', async (req, res) => {
+    console.log('Fetching membership groups for user:', req.body.username);
+    const { username } = req.body;
+    const result = await azureModel.getGroupsByMember(username);
+    res.json(result);
+});
+app.post('/get-group-details', async (req, res) => {
+    const { groupId } = req.body;
+    const result = await azureModel.getGroupById(groupId);
+    res.json(result);
+});
+//
+app.post('/get-group-by-id', async (req, res) => {
+    const { groupId } = req.body;
+    const result = await azureModel.getGroupById(groupId);
+    res.json(result);
+});
+
+app.post('/get-user-details', async (req, res) => {
+    const { userId } = req.body;
+    const result = await azureModel.getUserById(userId);
+    // Security Note: You might want to remove password before sending to frontend
+    if (result.user && result.user.password) {
+        delete result.user.password;
+    }
+    res.json(result);
+});
+
 app.post('/login', async (req, res) => {
     console.log('Login Request Received');
     const { username, password } = req.body;
