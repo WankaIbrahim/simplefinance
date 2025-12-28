@@ -23,15 +23,15 @@
                 <h1>404</h1>
                 <h2>Group Not Found</h2>
                 <p>The group you are looking for does not exist or you do not have permission.</p>
-                <a href="/" class="btn btn-primary">Go Back Home</a>
+                <a href="/display" class="btn btn-primary">Go Back Home</a>
             </div>
             <div v-else-if="activeGroup">
                 <h1>Group: {{activeGroup.name}}</h1>
                 <div>
                     <p>Members:</p>
                     <ul>
-                        <li v-for="member in activeGroup.members" :key="member"><a
-                                :href="'/profile?userId=' + member">{{ member.userId }}</a></li>
+                        <li v-for="member in activeGroup.admins" :key="member"><a
+                                :href="'/profile?userId=' + member.id">{{ member.username }}</a></li>
                     </ul>
                     <div v-if="activeGroup.admin === inputUsername">
                         <!-- @click="addMember" -->
@@ -39,6 +39,7 @@
                     </div>
                 </div>
                 <h2>Shared Expenses</h2>
+                <h3>Total Expenses: £{{ activeGroup.items.reduce((total, item) => total + (item.price * item.quantity), 0) }} / {{ activeGroup.budget }}</h3>
                 <table style="width: 100%;" @keydown.esc="showExpenseModal = false">
                     <thead>
                         <tr>
@@ -57,10 +58,10 @@
                             <td>{{ expense.buyer }}</td>
                             <td>{{ expense.quantity }}</td>
                             <td>£{{ expense.price * expense.quantity }}</td>
-                            <td>{{ expense.votedBy.length }}
+                            <td>{{ expense.voted.length }}
                                 <button @click="upvote(expense)"
-                                    v-if="!expense.votedBy.includes(inputUsername)">Upvote</button>
-                                <button @click="downvote(expense)" v-if="expense.votedBy.includes(inputUsername)"
+                                    v-if="!expense.voted.includes(inputUsername)">Upvote</button>
+                                <button @click="downvote(expense)" v-if="expense.voted.includes(inputUsername)"
                                     id="myBtn">Downvote</button>
                             </td>
                         </tr>

@@ -86,6 +86,33 @@ app.post('/newExpense', async (req, res) => {
     res.json(result);
 });
 
+app.post('/add-item', async (req, res) => {
+    console.log('Add item request:', req.body);
+    const { groupId, item } = req.body;
+    const result = await azureModel.addItemToGroup(groupId, item);
+    res.json(result);
+});
+
+app.post('/remove-item', async (req, res) => {
+    console.log('Remove item request:', req.body);
+    const { groupId, itemId } = req.body;
+    const result = await azureModel.removeItemFromGroup(groupId, itemId);
+    res.json(result);
+});
+
+app.post('/update-item', async (req, res) => {
+    console.log('Update item request:', req.body);
+    const { groupId, itemId, updates } = req.body;
+    const result = await azureModel.updateItem(groupId, itemId, updates);
+    res.json(result);
+});
+
+app.post('/vote-item', async (req, res) => {
+    console.log('Vote item request:', req.body);
+    const { groupId, itemId, username, action } = req.body;
+    const result = await azureModel.voteItem(groupId, itemId, username, action);
+    res.json(result);
+});
 
 async function callAzureAPI(endpoint, method, body = null) {
   const url = `${BACKEND_ENDPOINT}${endpoint}`;

@@ -4,9 +4,11 @@ import uuid
 class Item:
     def __init__(
         self,
-        id: int | None = 0,
+        id: int | None = uuid.uuid4().int,
         name: str | None= None,
-        price: int | None = 0,
+        price: float | None = 0.0,
+        quantity: int | None = 1,
+        buyer: dict | None= None,
         url: str | None=None,
         purchased: bool | None = False, # Not purchased = 0
         voted: list[str] | None= None
@@ -14,6 +16,8 @@ class Item:
         self.id = id
         self.name = name
         self.price = price
+        self.quantity = quantity
+        self.buyer = buyer
         self.url = url
         self.purchased = purchased
         self.voted = voted
@@ -23,6 +27,8 @@ class Item:
             "id": self.id,
             "name": self.name,
             "price": self.price,
+            "quantity": self.quantity,
+            "buyer": self.buyer,
             "url": self.url,
             "purchased": self.purchased,
             "voted": self.voted

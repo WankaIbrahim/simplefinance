@@ -136,25 +136,97 @@ var app = new Vue({
             window.location.href = '/display';
             console.log("User logged out + " + this.inputUsername);
         },
-        newExpense() {
+        async newExpense() {
+        if (!this.item || !this.price) {
+            alert('Please fill in item name and price');
+            return;
+        }
 
-            this.activeGroup.items.push(
-                {
-                    id: 3,
-                    name: this.item,
-                    quantity: this.quantity,
-                    price: this.price,
-                    buyer: this.payer,
-                    votedBy: [],
-                    purchased: false
-                }
-            );
+        const newItem = {
+            name: this.item,
+            quantity: this.quantity || 1,
+            price: parseFloat(this.price),
+            buyer: this.payer ? { username: this.payer } : null,
+            purchased: false,
+            voted: []
+        };
 
-            this.item = '';
-            this.quantity = 0;
-            this.payer = '';
-            this.price = 0.0;
-        },
+        try {
+            const response = await fetch('/add-item', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    groupId: this.activeGroup.groupId,
+                    item: newItem
+                })
+            });
+            const data = await response.json();
+
+            if (data.result) {
+                await this.fetchGroupDetails(this.activeGroup.groupId);
+                
+                // Clear form
+                this.item = '';
+                this.quantity = 1;
+                this.payer = '';
+                this.price = 0.0;
+            } else {
+                alert('Failed to add item: ' + data.msg);
+            }
+        } catch (error) {
+            console.error('Error adding item:', error);
+            alert('Failed to add item');
+        }
+    },
+    async removeExpense(itemId) {
+        if (!confirm('Are you sure you want to remove this item?')) return;
+
+        try {
+            const response = await fetch('/remove-item', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    groupId: this.activeGroup.groupId,
+                    itemId: itemId
+                })
+            });
+            const data = await response.json();
+
+            if (data.result) {
+                await this.fetchGroupDetails(this.activeGroup.groupId);
+            } else {
+                alert('Failed to remove item: ' + data.msg);
+            }
+        } catch (error) {
+            console.error('Error removing item:', error);
+            alert('Failed to remove item');
+        }
+    },
+
+    async updateExpense(itemId, updates) {
+        try {
+            const response = await fetch('/update-item', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    groupId: this.activeGroup.groupId,
+                    itemId: itemId,
+                    updates: updates
+                })
+            });
+            const data = await response.json();
+
+            if (data.result) {
+                await this.fetchGroupDetails(this.activeGroup.groupId);
+            } else {
+                alert('Failed to update item: ' + data.msg);
+            }
+        } catch (error) {
+            console.error('Error updating item:', error);
+            alert('Failed to update item');
+        }
+    },
+
         async fetchGroupDetails(id) {
             try {
                 const response = await fetch('/get-group-details', {
@@ -193,19 +265,49 @@ var app = new Vue({
                 console.error("Error loading profile:", error);
             }
         },
-        upvote(item) {
-            if (!item.votedBy.includes(this.inputUsername)) {
-                item.votedBy.push(this.inputUsername);
-                item.votes = item.votedBy.length;
+        async upvote(item) {
+        try {
+            const response = await fetch('/vote-item', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    groupId: this.activeGroup.groupId,
+                    itemId: item.id,
+                    username: this.inputUsername,
+                    action: 'upvote'
+                })
+            });
+            const data = await response.json();
+
+            if (data.result) {
+                await this.fetchGroupDetails(this.activeGroup.groupId);
             }
-        },
-        downvote(item) {
-            const index = item.votedBy.indexOf(this.inputUsername);
-            if (index !== -1) {
-                item.votedBy.splice(index, 1);
-                item.votes = item.votedBy.length;
+        } catch (error) {
+            console.error('Error upvoting:', error);
+        }
+    },
+    
+    async downvote(item) {
+        try {
+            const response = await fetch('/vote-item', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    groupId: this.activeGroup.groupId,
+                    itemId: item.id,
+                    username: this.inputUsername,
+                    action: 'downvote'
+                })
+            });
+            const data = await response.json();
+
+            if (data.result) {
+                await this.fetchGroupDetails(this.activeGroup.groupId);
             }
-        },
+        } catch (error) {
+            console.error('Error downvoting:', error);
+        }
+    },
         toggleTheme() {
             this.lightTheme = !this.lightTheme;
         },

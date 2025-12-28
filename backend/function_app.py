@@ -650,3 +650,235 @@ def get_user_by_name(req: func.HttpRequest) -> func.HttpResponse:
             status_code=400,
             mimetype="application/json"
         )
+    
+@app.route(route="group/item/add", methods=[func.HttpMethod.POST], auth_level=func.AuthLevel.FUNCTION)
+def add_item(req: func.HttpRequest) -> func.HttpResponse:
+    try:
+        data = req.get_json()
+        logging.info(f"Request to add item to group: {data}")
+        
+        groupId = data["groupId"]
+        item_data = data["item"]
+        
+        if not item_data.get("name"):
+            return func.HttpResponse(
+                json.dumps({"result": False, "msg": "Item name is required"}),
+                status_code=400,
+                mimetype="application/json"
+            )
+        
+        try:
+            group = GroupContainerProxy.read_item(item=groupId, partition_key=groupId)
+        except CosmosResourceNotFoundError:
+            return func.HttpResponse(
+                json.dumps({"result": False, "msg": "Group does not exist"}),
+                status_code=404,
+                mimetype="application/json"
+            )
+        
+        if item_data.get("buyer"):
+            buyer = item_data["buyer"]
+            try:
+                UserContainerProxy.read_item(item=buyer["id"], partition_key=buyer["username"])
+            except CosmosResourceNotFoundError:
+                return func.HttpResponse(
+                    json.dumps({"result": False, "msg": "Buyer user does not exist"}),
+                    status_code=404,
+                    mimetype="application/json"
+                )
+        
+        from shared_code.Group import Item
+        new_item = Item(
+            name=item_data["name"],
+            price=item_data.get("price", 0.0),
+            quantity=item_data.get("quantity", 1),
+            buyer=item_data.get("buyer"),
+            url=item_data.get("url"),
+            purchased=item_data.get("purchased", False),
+            voted=item_data.get("voted", [])
+        )
+        
+        group["items"].append(new_item.to_dict())
+        GroupContainerProxy.replace_item(item=groupId, body=group)
+        
+        return func.HttpResponse(
+            json.dumps({"result": True, "msg": "OK", "itemId": new_item.id}),
+            status_code=200,
+            mimetype="application/json"
+        )
+    except Exception as e:
+        return func.HttpResponse(
+            json.dumps({"result": False, "msg": str(e)}),
+            status_code=400,
+            mimetype="application/json"
+        )
+
+@app.route(route="group/item/remove", methods=[func.HttpMethod.POST], auth_level=func.AuthLevel.FUNCTION)
+def remove_item(req: func.HttpRequest) -> func.HttpResponse:
+    try:
+        data = req.get_json()
+        logging.info(f"Request to remove item from group: {data}")
+        
+        groupId = data["groupId"]
+        itemId = data["itemId"]
+        
+        try:
+            group = GroupContainerProxy.read_item(item=groupId, partition_key=groupId)
+        except CosmosResourceNotFoundError:
+            return func.HttpResponse(
+                json.dumps({"result": False, "msg": "Group does not exist"}),
+                status_code=404,
+                mimetype="application/json"
+            )
+        
+        original_length = len(group["items"])
+        group["items"] = [item for item in group["items"] if item.get("id") != itemId]
+        
+        if len(group["items"]) == original_length:
+            return func.HttpResponse(
+                json.dumps({"result": False, "msg": "Item not found"}),
+                status_code=404,
+                mimetype="application/json"
+            )
+        
+        GroupContainerProxy.replace_item(item=groupId, body=group)
+        
+        return func.HttpResponse(
+            json.dumps({"result": True, "msg": "OK"}),
+            status_code=200,
+            mimetype="application/json"
+        )
+    except Exception as e:
+        return func.HttpResponse(
+            json.dumps({"result": False, "msg": str(e)}),
+            status_code=400,
+            mimetype="application/json"
+        )
+
+@app.route(route="group/item/update", methods=[func.HttpMethod.POST], auth_level=func.AuthLevel.FUNCTION)
+def update_item(req: func.HttpRequest) -> func.HttpResponse:
+    try:
+        data = req.get_json()
+        logging.info(f"Request to update item: {data}")
+        
+        groupId = data["groupId"]
+        itemId = data["itemId"]
+        updates = data["updates"]
+        
+        try:
+            group = GroupContainerProxy.read_item(item=groupId, partition_key=groupId)
+        except CosmosResourceNotFoundError:
+            return func.HttpResponse(
+                json.dumps({"result": False, "msg": "Group does not exist"}),
+                status_code=404,
+                mimetype="application/json"
+            )
+        
+        item_found = False
+        for item in group["items"]:
+            if item.get("id") == itemId:
+                item_found = True
+                if "name" in updates:
+                    item["name"] = updates["name"]
+                if "price" in updates:
+                    item["price"] = updates["price"]
+                if "quantity" in updates:
+                    item["quantity"] = updates["quantity"]
+                if "buyer" in updates:
+                    buyer = updates["buyer"]
+                    if buyer:
+                        try:
+                            UserContainerProxy.read_item(item=buyer["id"], partition_key=buyer["username"])
+                        except CosmosResourceNotFoundError:
+                            return func.HttpResponse(
+                                json.dumps({"result": False, "msg": "Buyer user does not exist"}),
+                                status_code=404,
+                                mimetype="application/json"
+                            )
+                    item["buyer"] = buyer
+                if "url" in updates:
+                    item["url"] = updates["url"]
+                if "purchased" in updates:
+                    item["purchased"] = updates["purchased"]
+                if "voted" in updates:
+                    item["voted"] = updates["voted"]
+                break
+        
+        if not item_found:
+            return func.HttpResponse(
+                json.dumps({"result": False, "msg": "Item not found"}),
+                status_code=404,
+                mimetype="application/json"
+            )
+        
+        GroupContainerProxy.replace_item(item=groupId, body=group)
+        
+        return func.HttpResponse(
+            json.dumps({"result": True, "msg": "OK"}),
+            status_code=200,
+            mimetype="application/json"
+        )
+    except Exception as e:
+        return func.HttpResponse(
+            json.dumps({"result": False, "msg": str(e)}),
+            status_code=400,
+            mimetype="application/json"
+        )
+
+@app.route(route="group/item/vote", methods=[func.HttpMethod.POST], auth_level=func.AuthLevel.FUNCTION)
+def vote_item(req: func.HttpRequest) -> func.HttpResponse:
+    try:
+        data = req.get_json()
+        logging.info(f"Request to vote on item: {data}")
+        
+        groupId = data["groupId"]
+        itemId = data["itemId"]
+        username = data["username"]
+        vote_action = data.get("action", "toggle") 
+        
+        try:
+            group = GroupContainerProxy.read_item(item=groupId, partition_key=groupId)
+        except CosmosResourceNotFoundError:
+            return func.HttpResponse(
+                json.dumps({"result": False, "msg": "Group does not exist"}),
+                status_code=404,
+                mimetype="application/json"
+            )
+        
+
+        item_found = False
+        for item in group["items"]:
+            if item.get("id") == itemId:
+                item_found = True
+                voted = item.get("voted", [])
+                
+                if vote_action == "upvote" or (vote_action == "toggle" and username not in voted):
+                    if username not in voted:
+                        voted.append(username)
+                elif vote_action == "downvote" or (vote_action == "toggle" and username in voted):
+                    if username in voted:
+                        voted.remove(username)
+                
+                item["voted"] = voted
+                break
+        
+        if not item_found:
+            return func.HttpResponse(
+                json.dumps({"result": False, "msg": "Item not found"}),
+                status_code=404,
+                mimetype="application/json"
+            )
+        
+        GroupContainerProxy.replace_item(item=groupId, body=group)
+        
+        return func.HttpResponse(
+            json.dumps({"result": True, "msg": "OK"}),
+            status_code=200,
+            mimetype="application/json"
+        )
+    except Exception as e:
+        return func.HttpResponse(
+            json.dumps({"result": False, "msg": str(e)}),
+            status_code=400,
+            mimetype="application/json"
+        )

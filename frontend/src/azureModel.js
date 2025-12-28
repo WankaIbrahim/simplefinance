@@ -87,6 +87,60 @@ const azureModel = {
             return { result: false, msg: "User not found" };
         }
     },
+    addItemToGroup: async (groupId, item) => {
+        try {
+            const response = await axios.post(`${BASE_URL}/group/item/add`, {
+                groupId: groupId,
+                item: item
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Azure addItemToGroup Error:", error.message);
+            return { result: false, msg: "Failed to add item" };
+        }
+    },
+
+    removeItemFromGroup: async (groupId, itemId) => {
+        try {
+            const response = await axios.post(`${BASE_URL}/group/item/remove`, {
+                groupId: groupId,
+                itemId: itemId
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Azure removeItemFromGroup Error:", error.message);
+            return { result: false, msg: "Failed to remove item" };
+        }
+    },
+
+    updateItem: async (groupId, itemId, updates) => {
+        try {
+            const response = await axios.post(`${BASE_URL}/group/item/update`, {
+                groupId: groupId,
+                itemId: itemId,
+                updates: updates
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Azure updateItem Error:", error.message);
+            return { result: false, msg: "Failed to update item" };
+        }
+    },
+
+    voteItem: async (groupId, itemId, username, action = "toggle") => {
+        try {
+            const response = await axios.post(`${BASE_URL}/group/item/vote`, {
+                groupId: groupId,
+                itemId: itemId,
+                username: username,
+                action: action
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Azure voteItem Error:", error.message);
+            return { result: false, msg: "Failed to vote on item" };
+        }
+    }
 }
 
 module.exports = azureModel;
