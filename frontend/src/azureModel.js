@@ -41,12 +41,10 @@ const azureModel = {
 
     getGroupsByMember: async (username) => {
         try {
-            // Matches the route created in Step 1
             return (await axios.get(`${BASE_URL}/group/list/member`, { params: { username } })).data;
         } catch (e) { return { result: false, msg: "Error fetching member groups" }; }
     },
 
-    // Add this if you want guests too
     getGroupsByGuest: async (username) => {
         try {
             return (await axios.get(`${BASE_URL}/group/list/guest`, { params: { username } })).data;

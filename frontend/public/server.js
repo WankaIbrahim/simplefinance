@@ -1,10 +1,3 @@
-// let http = require('http');
-
-// http.createServer(function (req, res) {
-//     res.writeHead(200, {'Content-Type': 'text/plain'});
-//     res.end('Hello World!');
-// }).listen(8080);
-
 var socket = null;
 
 var app = new Vue({
@@ -19,7 +12,7 @@ var app = new Vue({
         statusMessage: '',
         statusColor: 'red',
 
-        activeGroupIndex: 0, // Id of current group
+        activeGroupIndex: 0,
         sortBy: 'votes',
         sortDesc: true,
 
@@ -69,7 +62,6 @@ var app = new Vue({
         if (profileId) {
             this.fetchUserProfile(profileId);
         } else if (window.location.pathname === '/profile' && this.userId) {
-            // If on profile page but no ID in URL, load MY profile
             this.fetchUserProfile(this.userId);
         }
 
@@ -89,10 +81,6 @@ var app = new Vue({
             return this.groups.filter(group => {
                 const inUsers = group.users && Array.isArray(group.users) &&
                     group.users.some(u => u.username === this.inputUsername);
-
-                // const inGuests = group.guests && Array.isArray(group.guests) &&
-                //     group.guests.some(g => g.username === this.inputUsername);
-
                 if (inUsers) return true;
 
                 return false;
@@ -111,21 +99,19 @@ var app = new Vue({
 
                 if (data.result === true) {
                     if (endpoint === '/login') {
-                        localStorage.setItem('username', data.username); // Use server data
-                        localStorage.setItem('userId', data.userId);     // SAVE ID HERE
+                        localStorage.setItem('username', data.username);
+                        localStorage.setItem('userId', data.userId);     
                         localStorage.setItem('loggedIn', 'true');
 
                         this.inputUsername = data.username;
                         this.userId = data.userId;
                         this.loggedIn = true;
 
-                        // Redirect to home if needed, or fetch data
                         if (window.location.pathname === '/display') {
                             this.fetchMyGroups();
                             this.fetchMembershipGroups();
                         }
                     } else {
-                        // Register logic...
                         this.statusMessage = 'Registration successful';
                         this.statusColor = 'green';
                     }
@@ -164,7 +150,6 @@ var app = new Vue({
                 }
             );
 
-            // this will clear the form inputs
             this.item = '';
             this.quantity = 0;
             this.payer = '';
@@ -191,7 +176,6 @@ var app = new Vue({
             }
         },
 
-        // NEW: Fetch user profile details
         async fetchUserProfile(id) {
             try {
                 const response = await fetch('/get-user-details', {
@@ -202,12 +186,8 @@ var app = new Vue({
                 const data = await response.json();
 
                 if (data.result && data.user) {
-                    // You might want a new data property for 'viewedProfile' 
-                    // instead of overwriting 'users' array
                     this.searchUsername = data.user.username;
                     this.searchUserId = data.user.id;
-                    // Store the full object if you want to display email/bio
-                    // this.viewedProfile = data.user; 
                 }
             } catch (error) {
                 console.error("Error loading profile:", error);
@@ -253,8 +233,6 @@ var app = new Vue({
                 console.error("Error fetching groups:", error);
             }
         },
-        //
-        //
         async fetchMembershipGroups() {
             if (!this.inputUsername) return;
             try {
@@ -267,7 +245,6 @@ var app = new Vue({
 
                 if (data.result && data.groups) {
                     data.groups.forEach(serverGroup => {
-                        // FIX: Check against the main 'groups' array, not the computed property
                         const exists = this.groups.find(g => g.id === serverGroup.id);
                         if (!exists) {
                             this.groups.push(serverGroup);

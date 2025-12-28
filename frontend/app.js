@@ -60,7 +60,6 @@ app.post('/get-group-by-id', async (req, res) => {
 app.post('/get-user-details', async (req, res) => {
     const { userId } = req.body;
     const result = await azureModel.getUserById(userId);
-    // Security Note: You might want to remove password before sending to frontend
     if (result.user && result.user.password) {
         delete result.user.password;
     }
