@@ -1,47 +1,141 @@
-/* header.ejs */
+/* public/header.css */
+
 nav {
-    /* background: red; */
-    color: yellow;
-    display: block;
-    background: rgb(49, 49, 49);
-    padding-right: 1rem;
-    padding-left: 1rem;
-    text-align: center;
+    background-color: var(--bg-header); /* From main.css */
+    color: var(--text-white);
     width: 100%;
-    min-height: 50px;
-    /* max-height: 60px; */
-    height: 50px;
-    spacing: 10px;
-    /* height: 50px; */
+    height: 60px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
 }
-nav a{
-    color: yellow;
+
+.nav-container {
+    width: 100%;
+    max-width: var(--layout-width); /* From main.css */
+    padding: 0 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo a {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--accent); /* From main.css */
+    text-transform: uppercase;
+    letter-spacing: 1px;
     text-decoration: none;
-    /* margin-right: 15px; */
+    transition: color 0.3s ease;
+}
+
+.logo a:hover {
+    color: var(--text-white);
+}
+
+.nav-menu {
+    display: flex;
+    gap: 25px;
+    align-items: center;
+}
+
+.nav-link {
+    color: var(--text-white);
+    text-decoration: none;
     font-size: 15px;
+    font-weight: 500;
+    position: relative;
+    padding: 5px 0;
+    transition: color 0.3s ease;
 }
 
-nav .logo {
-    float: left;
-}
-nav .nav-menu {
-    
-    float: right;
-}
-.nav-menu a:hover {
-    background: gray;
+/* Underline Animation */
+.nav-link::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: 0;
+    left: 0;
+    background-color: var(--accent);
+    transition: width 0.3s ease;
 }
 
-.nav-logout {
+.nav-link:hover { color: var(--accent); }
+.nav-link:hover::after { width: 100%; }
+
+.nav-link.active-page { color: var(--accent); }
+.nav-link.active-page::after { width: 100%; }
+
+/* Buttons in Header */
+.nav-btn {
+    background: transparent;
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    padding: 6px 18px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-left: 10px;
+}
+
+.nav-btn:hover {
+    background-color: var(--accent);
+    color: var(--bg-header);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
+}
+
+/* --- MOBILE HAMBURGER MENU (Add to bottom of header.css) --- */
+
+/* 1. Hamburger Icon (Hidden by default on Desktop) */
+.hamburger {
+    display: none;
     background: none;
     border: none;
-    color: #0d6efd;
-    font-size: 15px;
+    color: var(--accent); /* Uses your main Yellow color */
+    font-size: 2rem;
     cursor: pointer;
-    padding: 0;
-    margin-left: 8px;
+    padding: 0 10px;
 }
 
-.nav-logout:hover {
-    text-decoration: underline;
+/* 2. Mobile Styles (Only apply if screen < 900px) */
+@media (max-width: 900px) {
+    /* Show the icon */
+    .hamburger {
+        display: block;
+    }
+
+    /* Hide the menu list by default and style it as a dropdown */
+    .nav-menu {
+        position: absolute;
+        top: 60px; /* Push it below the header */
+        left: 0;
+        width: 100%;
+        background-color: var(--bg-header); /* Same dark color as header */
+        flex-direction: column; /* Stack items vertically */
+        padding: 20px 0;
+        gap: 20px;
+        box-shadow: 0 10px 10px rgba(0,0,0,0.3);
+        
+        /* Animation States */
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-20px);
+        transition: all 0.3s ease;
+        z-index: 999;
+    }
+
+    /* This class is added by Vue when you click the button */
+    .nav-menu.open {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
 }

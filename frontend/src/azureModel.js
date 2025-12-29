@@ -140,7 +140,19 @@ const azureModel = {
             console.error("Azure voteItem Error:", error.message);
             return { result: false, msg: "Failed to vote on item" };
         }
+    },
+    updateUser: async (userId, updates) => {
+        try {
+            const response = await axios.post(`${BASE_URL}/user/update`, {
+                userId: userId,
+                ...updates
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Azure updateUser Error:", error.message);
+            return { result: false, msg: "Failed to update user" };
+        }
     }
-}
+};
 
 module.exports = azureModel;

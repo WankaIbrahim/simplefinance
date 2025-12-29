@@ -1,0 +1,219 @@
+.group-header {
+    margin-bottom: 20px;
+}
+.group-header h1 {
+    color: var(--accent);
+    margin-bottom: 5px;
+    font-size: 2rem;
+}
+.description {
+    color: var(--text-light);
+    font-style: italic;
+}
+
+.admin-toolbar {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-left: 4px solid var(--accent);
+}
+.admin-toolbar h3 {
+    font-size: 1rem;
+    margin: 0;
+    color: var(--text-main);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.toolbar-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.budget-section {
+    margin-bottom: 20px;
+}
+.budget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 10px;
+}
+.budget-numbers {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--text-main);
+}
+.text-muted {
+    color: #888;
+    font-size: 0.9rem;
+    font-weight: normal;
+}
+.progress-bar-container {
+    width: 100%;
+    height: 12px;
+    background-color: #eee;
+    border-radius: 6px;
+    overflow: hidden;
+}
+.progress-bar-fill {
+    height: 100%;
+    background-color: var(--accent);
+    transition: width 0.3s ease;
+}
+
+/* table */
+.expense-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.expense-table th {
+    background-color: #2c2f33;
+    color: var(--accent);
+    padding: 15px;
+    text-align: left;
+    border-bottom: 2px solid var(--border);
+}
+.expense-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    color: var(--text-main);
+}
+
+.expense-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+.expense-table tr:hover {
+    background-color: #f1f1f1;
+}
+
+.price {
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+}
+
+.btn-add-row {
+    width: 100%;
+    background-color: transparent;
+    border: none;
+    border-top: 1px solid var(--border);
+    padding: 15px;
+    color: var(--accent-text);
+    background-color: var(--accent);
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.btn-add-row:hover {
+    background-color: var(--accent-hover);
+}
+
+.member-category {
+    margin-bottom: 20px;
+}
+.member-category h4 {
+    font-size: 0.85rem;
+    color: #888;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+.sidebar-right ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.sidebar-right li {
+    margin-bottom: 8px;
+}
+.user-link {
+    display: flex;
+    align-items: center;
+    color: var(--text-main);
+    font-weight: 500;
+}
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+.status-dot.admin { background-color: var(--accent); }
+.status-dot.member { background-color: #4CAF50; }
+.status-dot.guest { background-color: #9e9e9e; }
+
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 2000;
+}
+.modal-card {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 450px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+.form-row { display: flex; gap: 15px; }
+.form-group { margin-bottom: 15px; width: 100%; }
+.form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9rem;}
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+.btn-icon { background: none; border: none; cursor: pointer; font-size: 1.2rem; padding: 0 5px;}
+.btn-icon.upvote { color: #4CAF50; }
+.btn-icon.downvote { color: #F44336; }
+
+
+@media (max-width: 900px) {
+    
+    .app-layout {
+        overflow-x: hidden; 
+    }
+
+    .sidebar-left, .sidebar-right {
+        display: block !important;
+        position: fixed;
+        top: 60px;
+        bottom: 0;
+        width: 75%; 
+        z-index: 1000;
+        background-color: var(--bg-card); 
+        box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+        overflow-y: auto; 
+    }
+
+    .sidebar-left {
+        left: 0;
+        transform: translateX(-100%);
+    }
+    .sidebar-left.open {
+        transform: translateX(0);
+    }
+
+    .sidebar-right {
+        right: 0;
+        transform: translateX(100%);
+    }
+    .sidebar-right.open {
+        transform: translateX(0);
+    }
+
+    .sidebar-overlay {
+        position: fixed;
+        top: 0; left: 0; 
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.6);
+        z-index: 990;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+    }
+    .sidebar-overlay.active {
+        opacity: 1;
+        pointer-events: auto;
+    }
+}

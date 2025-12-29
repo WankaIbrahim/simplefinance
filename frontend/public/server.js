@@ -3,29 +3,33 @@ var socket = null;
 var app = new Vue({
     el: '#server',
     data: {
+
+        // User authentication data
         loggedIn: false,
-        scene: 0,
         inputUsername: '',
         inputPassword: '',
+        userId: null,
         isAdmin: false,
 
+        // Data to update user
+        newPassword: '',
+
+        // Status message for login/register
         statusMessage: '',
         statusColor: 'red',
 
-        activeGroupIndex: 0,
+        // Data for profile view
+        searchUsername: '',
+        searchUserId: null,
+
+        // Data for group view
+        groupNotFound: false,
+        activeGroup: null,
+        // data for sorting the group table
         sortBy: 'votes',
         sortDesc: true,
 
-        userId: null,
-        users: [{ id: 1, username: 'Alice' },
-        { id: 2, username: 'Bob' },
-        { id: 3, username: 'Dave' },
-        { id: 4, username: 'test' }],
-        searchUsername: '',
-        searchUserId: null,
-        groupNotFound: false,
-
-        activeGroup: null,
+        // Data for groups
         groups: [],
         groupMembers: [],
         item: '',
@@ -34,9 +38,15 @@ var app = new Vue({
         price: 0.0,
         groupDescription: '',
 
-
+        // Misc data 
         showExpenseModal: false,
         lightTheme: false,
+        mobileMenuOpen: false,
+        leftSidebarOpen: false,
+        rightSidebarOpen: false,
+        touchStartX: 0,
+        touchEndX: 0,
+        windowWidth: window.innerWidth
     },
     mounted() {
         if (localStorage.getItem('loggedIn') === 'true') {
@@ -65,7 +75,19 @@ var app = new Vue({
             this.fetchUserProfile(this.userId);
         }
 
+        // swipe menus functionality
+        window.addEventListener('resize', this.handleResize);
+        window.addEventListener('touchstart', e => {
+            this.touchStartX = e.changedTouches[0].screenX;
+        });
+        window.addEventListener('touchend', e => {
+            this.touchEndX = e.changedTouches[0].screenX;
+            this.handleSwipe();
+        });
 
+    },
+    beforeDestroy() {
+        window.removeEventListener('resize', this.handleResize);
     },
     computed: {
         myGroups() {
@@ -85,9 +107,32 @@ var app = new Vue({
 
                 return false;
             });
-        }
+        },
+
+        isCurrentUserAdmin() {
+            if (!this.activeGroup || !this.activeGroup.admins) return false;
+            return this.activeGroup.admins.some(admin => admin.username === this.inputUsername);
+        },
+
+        isCurrentUserMember() {
+            if (!this.activeGroup || !this.activeGroup.users) return false;
+            return this.activeGroup.users.some(user => user.username === this.inputUsername);
+        },
+
+        isCurrentUserGuest() {
+            if (!this.activeGroup || !this.activeGroup.guests) return false;
+            return this.activeGroup.guests.some(guest => guest.username === this.inputUsername);
+        },
+
+        isCurrentUserInGroup() {
+            return this.isCurrentUserAdmin || this.isCurrentUserMember || this.isCurrentUserGuest;
+        },
+        // currentPath() {
+        // return window.location.pathname;
+        // }
     },
     methods: {
+
         async request(endpoint) {
             try {
                 const response = await fetch(endpoint, {
@@ -100,7 +145,7 @@ var app = new Vue({
                 if (data.result === true) {
                     if (endpoint === '/login') {
                         localStorage.setItem('username', data.username);
-                        localStorage.setItem('userId', data.userId);     
+                        localStorage.setItem('userId', data.userId);
                         localStorage.setItem('loggedIn', 'true');
 
                         this.inputUsername = data.username;
@@ -118,7 +163,7 @@ var app = new Vue({
                 } else {
                     this.statusMessage = data.msg;
                     this.statusColor = 'red';
-                }
+                } w
             } catch (error) {
                 console.error('Error:', error);
                 this.statusMessage = 'Connection failed';
@@ -137,95 +182,96 @@ var app = new Vue({
             console.log("User logged out + " + this.inputUsername);
         },
         async newExpense() {
-        if (!this.item || !this.price) {
-            alert('Please fill in item name and price');
-            return;
-        }
-
-        const newItem = {
-            name: this.item,
-            quantity: this.quantity || 1,
-            price: parseFloat(this.price),
-            buyer: this.payer ? { username: this.payer } : null,
-            purchased: false,
-            voted: []
-        };
-
-        try {
-            const response = await fetch('/add-item', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    groupId: this.activeGroup.groupId,
-                    item: newItem
-                })
-            });
-            const data = await response.json();
-
-            if (data.result) {
-                await this.fetchGroupDetails(this.activeGroup.groupId);
-                
-                // Clear form
-                this.item = '';
-                this.quantity = 1;
-                this.payer = '';
-                this.price = 0.0;
-            } else {
-                alert('Failed to add item: ' + data.msg);
+            if (!this.item || !this.price) {
+                alert('Please fill in item name and price');
+                return;
             }
-        } catch (error) {
-            console.error('Error adding item:', error);
-            alert('Failed to add item');
-        }
-    },
-    async removeExpense(itemId) {
-        if (!confirm('Are you sure you want to remove this item?')) return;
 
-        try {
-            const response = await fetch('/remove-item', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    groupId: this.activeGroup.groupId,
-                    itemId: itemId
-                })
-            });
-            const data = await response.json();
+            const newItem = {
+                name: this.item,
+                quantity: this.quantity || 1,
+                price: parseFloat(this.price),
+                buyer: this.payer ? { username: this.payer } : null,
+                purchased: false,
+                voted: []
+            };
 
-            if (data.result) {
-                await this.fetchGroupDetails(this.activeGroup.groupId);
-            } else {
-                alert('Failed to remove item: ' + data.msg);
+            try {
+                const response = await fetch('/add-item', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        groupId: this.activeGroup.groupId,
+                        item: newItem
+                    })
+                });
+                const data = await response.json();
+
+                if (data.result) {
+                    await this.fetchGroupDetails(this.activeGroup.groupId);
+
+                    // Clear form
+                    this.item = '';
+                    this.quantity = 1;
+                    this.payer = '';
+                    this.price = 0.0;
+                    this.buyer = '';
+                } else {
+                    alert('Failed to add item: ' + data.msg);
+                }
+            } catch (error) {
+                console.error('Error adding item:', error);
+                alert('Failed to add item');
             }
-        } catch (error) {
-            console.error('Error removing item:', error);
-            alert('Failed to remove item');
-        }
-    },
+        },
+        async removeExpense(itemId) {
+            if (!confirm('Are you sure you want to remove this item?')) return;
 
-    async updateExpense(itemId, updates) {
-        try {
-            const response = await fetch('/update-item', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    groupId: this.activeGroup.groupId,
-                    itemId: itemId,
-                    updates: updates
-                })
-            });
-            const data = await response.json();
+            try {
+                const response = await fetch('/remove-item', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        groupId: this.activeGroup.groupId,
+                        itemId: itemId
+                    })
+                });
+                const data = await response.json();
 
-            if (data.result) {
-                await this.fetchGroupDetails(this.activeGroup.groupId);
-            } else {
-                alert('Failed to update item: ' + data.msg);
+                if (data.result) {
+                    await this.fetchGroupDetails(this.activeGroup.groupId);
+                } else {
+                    alert('Failed to remove item: ' + data.msg);
+                }
+            } catch (error) {
+                console.error('Error removing item:', error);
+                alert('Failed to remove item');
             }
-        } catch (error) {
-            console.error('Error updating item:', error);
-            alert('Failed to update item');
-        }
-    },
+        },
+
+        async updateExpense(itemId, updates) {
+            try {
+                const response = await fetch('/update-item', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        groupId: this.activeGroup.groupId,
+                        itemId: itemId,
+                        updates: updates
+                    })
+                });
+                const data = await response.json();
+
+                if (data.result) {
+                    await this.fetchGroupDetails(this.activeGroup.groupId);
+                } else {
+                    alert('Failed to update item: ' + data.msg);
+                }
+            } catch (error) {
+                console.error('Error updating item:', error);
+                alert('Failed to update item');
+            }
+        },
 
         async fetchGroupDetails(id) {
             try {
@@ -266,48 +312,48 @@ var app = new Vue({
             }
         },
         async upvote(item) {
-        try {
-            const response = await fetch('/vote-item', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    groupId: this.activeGroup.groupId,
-                    itemId: item.id,
-                    username: this.inputUsername,
-                    action: 'upvote'
-                })
-            });
-            const data = await response.json();
+            try {
+                const response = await fetch('/vote-item', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        groupId: this.activeGroup.groupId,
+                        itemId: item.id,
+                        username: this.inputUsername,
+                        action: 'upvote'
+                    })
+                });
+                const data = await response.json();
 
-            if (data.result) {
-                await this.fetchGroupDetails(this.activeGroup.groupId);
+                if (data.result) {
+                    await this.fetchGroupDetails(this.activeGroup.groupId);
+                }
+            } catch (error) {
+                console.error('Error upvoting:', error);
             }
-        } catch (error) {
-            console.error('Error upvoting:', error);
-        }
-    },
-    
-    async downvote(item) {
-        try {
-            const response = await fetch('/vote-item', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    groupId: this.activeGroup.groupId,
-                    itemId: item.id,
-                    username: this.inputUsername,
-                    action: 'downvote'
-                })
-            });
-            const data = await response.json();
+        },
 
-            if (data.result) {
-                await this.fetchGroupDetails(this.activeGroup.groupId);
+        async downvote(item) {
+            try {
+                const response = await fetch('/vote-item', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        groupId: this.activeGroup.groupId,
+                        itemId: item.id,
+                        username: this.inputUsername,
+                        action: 'downvote'
+                    })
+                });
+                const data = await response.json();
+
+                if (data.result) {
+                    await this.fetchGroupDetails(this.activeGroup.groupId);
+                }
+            } catch (error) {
+                console.error('Error downvoting:', error);
             }
-        } catch (error) {
-            console.error('Error downvoting:', error);
-        }
-    },
+        },
         toggleTheme() {
             this.lightTheme = !this.lightTheme;
         },
@@ -357,5 +403,59 @@ var app = new Vue({
                 console.error("Error fetching groups:", error);
             }
         },
+        handleSwipe() {
+            const distance = this.touchEndX - this.touchStartX;
+            const threshold = 50;
+            const edgeZone = 50;
+
+            // Swipe RIGHT (Open Left Sidebar)
+            if (distance > threshold && this.touchStartX < edgeZone) {
+                this.leftSidebarOpen = true;
+            }
+            // Swipe LEFT (Close Left Sidebar if open)
+            else if (distance < -threshold && this.leftSidebarOpen) {
+                this.leftSidebarOpen = false;
+            }
+
+            // Swipe LEFT (Open Right Sidebar)
+            if (distance < -threshold && this.touchStartX > window.innerWidth - edgeZone) {
+                this.rightSidebarOpen = true;
+            }
+            // Swipe RIGHT (Close Right Sidebar if open)
+            else if (distance > threshold && this.rightSidebarOpen) {
+                this.rightSidebarOpen = false;
+            }
+        },
+        handleResize() {
+            this.windowWidth = window.innerWidth;
+        },
+
+
+        closeSidebars() {
+            this.leftSidebarOpen = false;
+            this.rightSidebarOpen = false;
+            this.mobileMenuOpen = false;
+        },
+        async updateProfile() {
+            try {
+                const response = await fetch('/update-user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: this.userId,
+                        updates: {
+                            password: this.newPassword || undefined
+                        }
+                    })
+                });
+                const data = await response.json();
+                if (data.result) {
+                    this.statusMessage = "Password updated successfully";
+                    this.statusColor = 'green';
+                }
+            } catch (error) {
+                console.error("Error updating profile:", error);
+            }
+        }
     }
 });

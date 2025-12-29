@@ -1,19 +1,20 @@
 <nav>
-    <div v-if="loggedIn" class="nav-container">
-    <div class="logo">
-        <a href="/" style="text-decoration: none;"> SimpleFinance</a>
-    </div>
-    <div class="nav-menu">
-        <a href="/">Home</a> |
-        <a href="/display">Dashboard</a> |
-        <a href="/">About</a> |
-        <a href="/settings">Settings</a> |
-        <a :href="'/profile?userId=' + userId">My Profile</a>        
-        <!-- <button>Sign in</button> -->
-        <button @click="logout" class="nav-logout">Sign out</button>
-        <button @click="lightTheme = !lightTheme" v-if="lightTheme">Light Theme</button>
-        <button @click="lightTheme = !lightTheme" v-if="!lightTheme">Dark Theme</button>
-    </div>
-    </div>
+    <div class="nav-container">
+        <div class="logo">
+            <a href="/">SimpleFinance</a>
+        </div>
 
+        <button class="hamburger" @click="mobileMenuOpen = !mobileMenuOpen">
+            ☰
+        </button>
+        
+        <div class="nav-menu" :class="{ 'open': mobileMenuOpen }">
+            <template v-if="loggedIn">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/display" class="nav-link">Dashboard</a>
+                <a :href="'/profile?userId=' + userId" class="nav-link">My Profile</a>
+                <button @click="logout" class="nav-btn">Sign out</button>
+            </template>
+            </div>
+    </div>
 </nav>

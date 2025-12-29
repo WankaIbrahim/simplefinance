@@ -1,7 +1,9 @@
 import azure.functions as func
 import json
 import logging
-import os 
+import os
+
+from exceptiongroup import catch 
 from shared_code.User import User
 from shared_code.Group import Group
 from azure.cosmos import CosmosClient
@@ -873,6 +875,42 @@ def vote_item(req: func.HttpRequest) -> func.HttpResponse:
         
         return func.HttpResponse(
             json.dumps({"result": True, "msg": "OK"}),
+            status_code=200,
+            mimetype="application/json"
+        )
+    except Exception as e:
+        return func.HttpResponse(
+            json.dumps({"result": False, "msg": str(e)}),
+            status_code=400,
+            mimetype="application/json"
+        )
+    
+@app.route(route="user/update", methods=[func.HttpMethod.POST], auth_level=func.AuthLevel.FUNCTION)
+def update_user(req: func.HttpRequest) -> func.HttpResponse:
+    try:
+        data = req.get_json()
+        logging.info(f"Request to update user: {data}")
+
+        items = list(UserContainerProxy.query_items(
+            query="SELECT * FROM c WHERE c.id = @id",
+            parameters=[{"name": "@id", "value": data["userId"]}],
+            enable_cross_partition_query=True
+        ))
+
+
+        user_doc = items[0]
+        if "password" in data:
+            user_doc["password"] = data["password"]
+        # if "email" in data:
+        #     user_doc["email"] = data["email"]
+
+        UserContainerProxy.replace_item(item=user_doc["id"], body=user_doc)        
+
+        return func.HttpResponse(
+            json.dumps({
+                "result": True, 
+                "msg": "OK",
+            }),
             status_code=200,
             mimetype="application/json"
         )
