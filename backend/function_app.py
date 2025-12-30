@@ -3,7 +3,6 @@ import json
 import logging
 import os
 
-from exceptiongroup import catch 
 from shared_code.User import User
 from shared_code.Group import Group
 from azure.cosmos import CosmosClient
