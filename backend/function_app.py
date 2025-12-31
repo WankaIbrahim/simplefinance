@@ -5,7 +5,7 @@ import os
 
 from shared_code.User import User
 from shared_code.User import hash_password, verify_password
-from shared_code.Group import Group
+from shared_code.Group import Group, ai_item_suggest_helper
 from azure.cosmos import CosmosClient
 from azure.cosmos.exceptions import CosmosResourceNotFoundError
 from passlib.hash import bcrypt
@@ -986,9 +986,6 @@ def respond_friend_request(req : func.HttpRequest) -> func.HttpResponse:
         return func.HttpResponse(json.dumps({"result" : False, "msg" : str(err)}), status_code=400, mimetype="application/json")
 
 
-def ai_voting_response() -> func.HttpResponse:
-    pass
-
 @app.route(route="user/update", methods=[func.HttpMethod.POST], auth_level=func.AuthLevel.FUNCTION)
 def update_user(req: func.HttpRequest) -> func.HttpResponse:
     try:
@@ -1024,3 +1021,9 @@ def update_user(req: func.HttpRequest) -> func.HttpResponse:
             status_code=400,
             mimetype="application/json"
         )
+    
+@app.route(route="group/items/suggest", methods=[func.HttpMethod.POST], auth_level=func.AuthLevel.FUNCTION)
+def group_items_ai_suggestion(req: func.HttpRequest) -> func.HttpResponse:
+    data = req.get_json()
+
+

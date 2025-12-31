@@ -1,10 +1,13 @@
 import json
 import uuid
+import os
+import logging
+import requests
 
 class Item:
     def __init__(
         self,
-        id: str | None = None,
+        id: int | None = uuid.uuid4().int,
         name: str | None= None,
         price: float | None = 0.0,
         quantity: int | None = 1,
@@ -13,7 +16,7 @@ class Item:
         purchased: bool | None = False, # Not purchased = 0
         voted: list[str] | None= None
         ):
-        self.id = str(id) if id is not None else str(uuid.uuid4())
+        self.id = id
         self.name = name
         self.price = price
         self.quantity = quantity
@@ -98,3 +101,81 @@ class Group:
             budget=data.get("budget", 0),
             items=[Item(**d) for d in data.get("items", [])],
         )
+    
+
+def ai_item_suggest_helper(idea: str | None = "", people: int | None = 0, budget: float | None = 0.0, additional_notes: str | None = "") ->list[dict]:
+    azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT", "").rstrip("/")
+    azure_key = os.getenv("AZURE_OPENAI_KEY", "")
+    deployment_model = ("gpt-4o-mini" ,"")
+    model_version = ("2024-10-21", "")
+
+    if not azure_endpoint or not azure_key or not deployment_model or not model_version
+        raise ValueError("Missing Key infromation for the OPEN AI env")
+    url = f"{azure_endpoint}/openai/deployments/{deployment_model}/chat/completions?api-version={model_version}"
+    headers = {"api-key" : azure_key, "Content-Type" : "application/json"}
+    ai_system_prompt_guide = (
+        "You need to gener a shopping list of items for a group .\n"
+        "Return ONLY valid JSON .\n"
+        "Schema:\n"
+        "{"
+        "   'items': ["
+        "    {'name' : string, 'quantity' : int >= 1, 'price' : float >= 0, 'url' : null | string}"
+        "    ]"
+        "}\n"
+        "rules are as follows : \n"
+        "1. Keep items relevant to the scenario\n"
+        "2. The price is per unit in GBP\n"
+        "3. Try to keep budget total close to or less than budget\n"
+        "4. a range of 4-12 items ideally, but this is a soft margin, if more are needed add more\n"
+        "5. additional_notes are important, consider these equally to the other inputs\n"
+    )
+    user_input_payload = {
+        "idea" : idea,
+        "people" : people,
+        "budget" : budget,
+        "additionaly_notes" : additional_notes
+    }
+    body = {
+        "messages" : [
+            {"role" : "ai_system_prompt_guide", "content": ai_system_prompt_guide},
+            {"role" : "user", "content" : json.dumps(user_input_payload)}
+        ],
+        "max_tokens" : 1000, 
+        #Randomly set ^^
+        "response_format": {"type" : "json_object"}
+    }
+
+    r = requests.post(url, headers=headers, json=body, timeout= 25)
+    if r.status_code >= 400: 
+        raise RuntimeError(f"Azure Open AI error, code : {r.status_code}: {r.text}")
+    gpt_response_content = r.json()["choices"][0]["messages"]["content"]
+    parsed = json.loads(gpt_response_content)
+    items = parsed.get("items", [])
+    if not isinstance(items. list):
+        raise ValueError("Model returned an invalid JSON format")
+    cleaned: list[dict] = []
+    for i in items[: 30]: # first 30 0-29
+        if not isinstance(i, dict):
+            continue
+        item_name = (i.get("name") or "").strip() # get the name of the items
+        if not item_name:
+            continue
+        try:
+            item_quantity = int(i.get("quantity", 1)) # get quantity of items
+        except Exception:
+            item_quantity = 1
+        item_quantity = max(1, item_quantity) # take the max quant either 1 or the get amount
+        try: 
+            item_price = float(i.get("price"), 0.0)
+        except Exception:
+            item_price = 0.0
+        price = max(0.0, item_price) # get the max item price either 0 or the get amt
+        url_item = i.get("url")
+        if url_item is not None and not isinstance(url_item, str):
+            # if something and not a string set it to Nothing because it is wrong
+            url_item = None
+        #after cleaning everything append the proper json
+        cleaned.append({"name" : item_name, "quantity" : item_quantity, "price" : item_price, "url":  url_item})
+    if not cleaned: 
+        raise ValueError("No items were generated from the AI response")
+    return cleaned
