@@ -4,7 +4,7 @@ import uuid
 class Item:
     def __init__(
         self,
-        id: int | None = uuid.uuid4().int,
+        id: str | None = None,
         name: str | None= None,
         price: float | None = 0.0,
         quantity: int | None = 1,
@@ -13,7 +13,7 @@ class Item:
         purchased: bool | None = False, # Not purchased = 0
         voted: list[str] | None= None
         ):
-        self.id = id
+        self.id = str(id) if id is not None else str(uuid.uuid4())
         self.name = name
         self.price = price
         self.quantity = quantity

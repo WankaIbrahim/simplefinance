@@ -39,6 +39,13 @@ app.post('/my-groups', async (req, res) => {
     res.json(result);
 });
 
+app.post('/update-user', async (req, res) => {
+  console.log(`Updating user ${req.body.userId}`);
+    const { userId, updates } = req.body;
+    const result = await azureModel.updateUser(userId, updates);
+    res.json(result);
+});
+
 app.post('/membership-groups', async (req, res) => {
     console.log('Fetching membership groups for user:', req.body.username);
     const { username } = req.body;

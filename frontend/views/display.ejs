@@ -7,22 +7,22 @@
     <title>SimpleFinance</title>
     <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
     <link rel="stylesheet" href="/static/main.css">
+    <link rel="stylesheet" href="/static/display.css">
     <link rel="stylesheet" href="/static/header.css">
     <link rel="stylesheet" href="/static/footer.css">
-    <!-- <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css"> -->
     <link rel="icon" type="image/x-icon" href="./favicon.ico">
-
-    <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"> -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
 </head>
 
 <body>
     <div id="server">
 
         <%- include('header'); -%>
+
             <div class="app-layout">
-                <aside class="sidebar-left">
+                <div class="sidebar-overlay" :class="{ 'active': leftSidebarOpen || rightSidebarOpen }"
+                    @click="closeSidebars">
+                </div>
+                <aside class="sidebar-left" v-if="loggedIn" :class="{ 'open': leftSidebarOpen }">
                     <h3>Menu</h3>
                     <p>Welcome, {{ inputUsername }}</p>
                     <ul>
@@ -32,7 +32,6 @@
                 </aside>
 
                 <main class="content" style="display:block; justify-content: center;">
-
                     <div class="login" v-if="!loggedIn" style="display: grid;
                                          place-items: center;
                                          text-align: center;">
@@ -65,13 +64,14 @@
                     </div>
 
                     <div v-else>
-
+                        <div v-if="windowWidth <= 900"
+                            style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                            <button @click="leftSidebarOpen = true" class="btn">Menu &gt;</button>
+                            <button @click="rightSidebarOpen = true" class="btn">&lt; Social</button>
+                        </div>
 
                         <p>Hello {{inputUsername}}, ready to make budgets?</p>
                         <hr>
-                        <!-- <aside>
-                    <h2>Friends</h2>
-                </aside> -->
                         <div class="spending-groups" style="display:grid">
                             <div class="personal-groups">
                                 <h2>Personal Groups</h2>
@@ -79,7 +79,8 @@
 
                                     <div class="element" v-for="group in myGroups" :key="group.id"
                                         style="border: 5px solid black;">
-                                        <a :href="'/group-view?groupId=' + group.id" class="fill-div">{{ group.name }}</a>
+                                        <a :href="'/group-view?groupId=' + group.id" class="fill-div">{{ group.name
+                                            }}</a>
                                     </div>
                                     <div class="element">
                                         <div v-if="myGroups.length === 0" style="text-align: center;">
@@ -112,7 +113,8 @@
 
                                     <div class="element" v-for="group in membershipGroups" :key="group.id"
                                         style="border: 5px solid black;">
-                                        <a :href="'/group-view?groupId=' + group.id" class="fill-div">{{ group.name }}</a>
+                                        <a :href="'/group-view?groupId=' + group.id" class="fill-div">{{ group.name
+                                            }}</a>
                                     </div>
                                     <div class="element">
                                         <p>Join other groups!</p>
@@ -145,7 +147,7 @@
                         </div>
                     </div>
                 </main>
-                <aside class="sidebar-right">
+                <aside class="sidebar-right" v-if="loggedIn" :class="{ 'open': rightSidebarOpen }">
                     <div class="card">
                         <h3>Announcements</h3>
                         <p>Happy Christmas</p>
