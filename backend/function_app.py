@@ -5,7 +5,7 @@ import os
 
 from shared_code.User import User
 from shared_code.User import hash_password, verify_password
-from shared_code.Group import Group, ai_item_suggest_helper
+from shared_code.Group import Group, ai_item_suggest_helper, Item
 from azure.cosmos import CosmosClient
 from azure.cosmos.exceptions import CosmosResourceNotFoundError
 from passlib.hash import bcrypt
@@ -1024,6 +1024,74 @@ def update_user(req: func.HttpRequest) -> func.HttpResponse:
     
 @app.route(route="group/items/suggest", methods=[func.HttpMethod.POST], auth_level=func.AuthLevel.FUNCTION)
 def group_items_ai_suggestion(req: func.HttpRequest) -> func.HttpResponse:
-    data = req.get_json()
-
-
+    try: 
+        data = req.get_json()
+        groupId = data.get("groupId")
+        idea = (data.get("idea") or "").strip() # remove trailing whitespace etc
+        people = data.get("people")
+        budget = data.get("budget")
+        additional_notes = data.get("additional_notes")
+        add_items_to_group = data.get("addToGroup", False)
+        if isinstance(add_items_to_group, str):
+            add_items_to_group = add_items_to_group.lower() in ("1", "true", "yes")
+        else:
+            add_items_to_group = bool(add_items_to_group)
+        if not idea or not isinstance(idea, str):
+            no_idea_response_body = json.dumps({"result" : False, "msg" : "No idea or improper format"})
+            return func.HttpResponse(no_idea_response_body, status_code=400, mimetype="application/json") 
+        if not groupId or not isinstance(groupId, str):
+            no_groupId_response_body = json.dumps({"result" : False, "msg" : "No group id Found or improper format"})
+            return func.HttpResponse(no_groupId_response_body, status_code=400, mimetype="application/json")
+        try:
+            if people is not None: 
+                people =  int(people)
+            else : 
+                people = None
+        except Exception:
+            people = None
+        if people is not None:
+            #Dinner part for 1000 people maybe ?  or just keep it locked at like 50 ? 
+            people = max(1, min(1000, people))
+        try:
+            if budget is not None:
+                budget = float(budget)
+            else:
+                budget = None
+        except Exception:
+            budget = None
+        if budget is not None:
+            budget = max(0.0, budget)
+        suggested_items = ai_item_suggest_helper(idea, people, budget, additional_notes)
+        item_dictionary = []
+        new_item_ids = []
+        for i in suggested_items:
+            # Create the proper shape for every item in the dictionary then append to a list of items
+            # Alongside appropriate ids
+            new_item = Item(
+                name=i["name"],
+                price = i.get("price", 0.0),
+                quantity = i.get("quantity", 1),
+                url = i.get("url"),
+                purchased = False,
+                voted = []
+            )
+            item_dictionary.append(new_item.to_dict())
+            new_item_ids.append(new_item.id)
+        if add_items_to_group:
+            try:
+                group = GroupContainerProxy.read_item(item = groupId, partition_key=groupId)
+            except CosmosResourceNotFoundError:
+                unable_load_group_response_body = json.dumps({"result" : False, "msg" : "Unable to load a group, no group found"})
+                return func.HttpResponse(unable_load_group_response_body, status_code=404, mimetype="application/json")
+            group.setdefault("items" , [])
+            group["items"].extend(item_dictionary)
+            GroupContainerProxy.replace_item(item=groupId, body=group)
+            
+        correct_output_response_body = json.dumps({
+            "result" : True, "msg" : "OK" , "added" : add_items_to_group, "itemIds" : new_item_ids if add_items_to_group else [], "items" : item_dictionary
+        })
+        return func.HttpResponse(correct_output_response_body, status_code=200, mimetype="application/json")
+    except Exception as err:
+        logging.exception("AI RESPONSE FAILED")
+        failed_AI_response_body = json.dumps({"result" : False, "msg" : str(err)})
+        return func.HttpResponse(failed_AI_response_body, status_code=400, mimetype="application/json")

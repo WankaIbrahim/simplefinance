@@ -7,7 +7,7 @@ import requests
 class Item:
     def __init__(
         self,
-        id: int | None = uuid.uuid4().int,
+        id: int | None = None,
         name: str | None= None,
         price: float | None = 0.0,
         quantity: int | None = 1,
@@ -16,7 +16,7 @@ class Item:
         purchased: bool | None = False, # Not purchased = 0
         voted: list[str] | None= None
         ):
-        self.id = id
+        self.id = id if id is not None else uuid.uuid4().int
         self.name = name
         self.price = price
         self.quantity = quantity
@@ -114,13 +114,13 @@ def ai_item_suggest_helper(idea: str | None = "", people: int | None = 0, budget
     url = f"{azure_endpoint}/openai/deployments/{deployment_model}/chat/completions?api-version={model_version}"
     headers = {"api-key" : azure_key, "Content-Type" : "application/json"}
     ai_system_prompt_guide = (
-        "You need to gener a shopping list of items for a group .\n"
+        "You need to generate a shopping list of items for a group .\n"
         "Return ONLY valid JSON .\n"
         "Schema:\n"
-        "{"
-        "   'items': ["
-        "    {'name' : string, 'quantity' : int >= 1, 'price' : float >= 0, 'url' : null | string}"
-        "    ]"
+        "{\n"
+        '   "items": [\n'
+        '    {"name" : Roast Chicken (str), "quantity" :  2 (int >= 1), "price" : 22.99 (float >= 0), "url" : null | string}'
+        "    ]\n"
         "}\n"
         "rules are as follows : \n"
         "1. Keep items relevant to the scenario\n"
@@ -128,6 +128,8 @@ def ai_item_suggest_helper(idea: str | None = "", people: int | None = 0, budget
         "3. Try to keep budget total close to or less than budget\n"
         "4. a range of 4-12 items ideally, but this is a soft margin, if more are needed add more\n"
         "5. additional_notes are important, consider these equally to the other inputs\n"
+        "6. Do not include extra fields other than item name, quantity, price, url \n"
+        "7. do not specify the types don't say float int, string \n"
     )
     user_input_payload = {
         "idea" : idea,
@@ -135,9 +137,10 @@ def ai_item_suggest_helper(idea: str | None = "", people: int | None = 0, budget
         "budget" : budget,
         "additional_notes" : additional_notes
     }
+    # Valid roles system, user and assistant
     body = {
         "messages" : [
-            {"role" : "ai_system_prompt_guide", "content": ai_system_prompt_guide},
+            {"role" : "system", "content": ai_system_prompt_guide},
             {"role" : "user", "content" : json.dumps(user_input_payload)}
         ],
         "max_tokens" : 1000, 
