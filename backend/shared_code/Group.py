@@ -106,10 +106,10 @@ class Group:
 def ai_item_suggest_helper(idea: str | None = "", people: int | None = 0, budget: float | None = 0.0, additional_notes: str | None = "") ->list[dict]:
     azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT", "").rstrip("/")
     azure_key = os.getenv("AZURE_OPENAI_KEY", "")
-    deployment_model = ("gpt-4o-mini" ,"")
-    model_version = ("2024-10-21", "")
+    deployment_model = "gpt-4o-mini"
+    model_version = "2024-10-21"
 
-    if not azure_endpoint or not azure_key or not deployment_model or not model_version
+    if not azure_endpoint or not azure_key or not deployment_model or not model_version:
         raise ValueError("Missing Key infromation for the OPEN AI env")
     url = f"{azure_endpoint}/openai/deployments/{deployment_model}/chat/completions?api-version={model_version}"
     headers = {"api-key" : azure_key, "Content-Type" : "application/json"}
@@ -133,7 +133,7 @@ def ai_item_suggest_helper(idea: str | None = "", people: int | None = 0, budget
         "idea" : idea,
         "people" : people,
         "budget" : budget,
-        "additionaly_notes" : additional_notes
+        "additional_notes" : additional_notes
     }
     body = {
         "messages" : [
@@ -151,7 +151,7 @@ def ai_item_suggest_helper(idea: str | None = "", people: int | None = 0, budget
     gpt_response_content = r.json()["choices"][0]["messages"]["content"]
     parsed = json.loads(gpt_response_content)
     items = parsed.get("items", [])
-    if not isinstance(items. list):
+    if not isinstance(items, list):
         raise ValueError("Model returned an invalid JSON format")
     cleaned: list[dict] = []
     for i in items[: 30]: # first 30 0-29
@@ -166,10 +166,10 @@ def ai_item_suggest_helper(idea: str | None = "", people: int | None = 0, budget
             item_quantity = 1
         item_quantity = max(1, item_quantity) # take the max quant either 1 or the get amount
         try: 
-            item_price = float(i.get("price"), 0.0)
+            item_price = float(i.get("price", 0.0))
         except Exception:
             item_price = 0.0
-        price = max(0.0, item_price) # get the max item price either 0 or the get amt
+        item_price = max(0.0, item_price) # get the max item price either 0 or the get amt
         url_item = i.get("url")
         if url_item is not None and not isinstance(url_item, str):
             # if something and not a string set it to Nothing because it is wrong
