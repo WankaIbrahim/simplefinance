@@ -23,6 +23,13 @@ K = {
     "group_user_role_change": "dGst2DxbPun3HBc7sACmmYRlH-BH38jFAuBhPJWpJ-YhAzFumogylw==",
     "group_budget_set": "ErZe7mWprUXR9fTxaz39gicERXFeFjfxno7856M731D-AzFu23R4eA==",
     "group_name_set": "z2iy-teCedFOMW33P1PTFmGt3Cg3oVrAdx8Q4JbniB09AzFunpfr0A==",
+    "respond_friend_request" : "",
+    "send_friend_request" : "",
+    "update_budget": "",
+    "update_item":"",
+    "update_name":"",
+    "vote_item":""
+
 }
 
 def post(path, key, payload):
@@ -43,6 +50,22 @@ def get(path_qs, key):
 def _has_username(group: dict, section: str, username: str) -> bool:
     return any(u.get("username") == username for u in group.get(section, []))
 
+def send_req(from_a, to):
+    return post("/user/friend/request", "send_friend_request", {
+        "id_from_username_request": from_a["id"], 
+        "from_username_request": from_a["username"],
+        "to_username_request": to["username"]
+    })
+def get_user(userid):
+    return get(f"/user/get?userId={userid}", "user_get")["user"]
+
+def respond_req(to_user, from_user, accepted:bool):
+    return post("/user/friend/response", "respond_friend_request", {
+        "to_id": to_user["id"],
+        "to_username" : to_user["username"],
+        "from_username": from_user["username"],
+        "accepted" : accepted
+    })
 def test_workflow():
     suffix = uuid.uuid4().hex[:6]
 
@@ -65,10 +88,37 @@ def test_workflow():
     # Get Test Users
     lewis_got = get(f"/user/get?userId={lewis['id']}", "user_get")["user"]
     assert lewis_got.get("username") == lewis["username"], lewis_got
+    stored = lewis_got.get("password")
+    assert stored is not None, f"/user/get didn't return 'password'. Keys: {list(lewis_got.keys())}"
+    assert stored != lewis["password"], f"Password stored in DB is still plaintext: {stored!r}"
+    assert isinstance(stored, str) and stored.startswith("$2"), f"Stored password does not look like bcrypt: {stored!r}"
 
     ibrahim_got = get(f"/user/get?userId={ibrahim['id']}", "user_get")["user"]
     assert ibrahim_got.get("username") == ibrahim["username"], ibrahim_got
     
+    # Friend Requests
+    assert send_req(lewis, ibrahim)["result"] is True
+    lew_user, ib_user = get_user(lewis["id"]), get_user(ibrahim["id"])
+    assert ibrahim["username"] in lew_user.get("outgoing_requests", []), lew_user
+    assert lewis["username"] in ib_user.get("incoming_requests", []), ib_user
+
+    ##Accepting request
+    assert respond_req(ibrahim, lewis, True)["result"] is True
+    lew_user, ib_user = get_user(lewis["id"]), get_user(ibrahim["id"])
+    assert ibrahim["username"] in lew_user.get("friends", []), lew_user
+    assert lewis["username"] in ib_user.get("friends", []), ib_user
+
+    #Reject case
+    adam = {"username": f"adam_{suffix}", "password" : "Adam123"}
+    adam["id"] = post("/user/register", "user_register", adam)["userId"]
+    assert send_req(adam, lewis)["result"] is True
+    assert respond_req(lewis, adam, False)["result"] is True
+    adam_user, lew_user = get_user(adam["id"]), get_user(lewis["id"])
+    assert adam["username"] not in lew_user.get("friends", []), lew_user
+    assert lewis["username"] not in adam_user.get("friends", []), adam_user
+    post("/user/delete", "user_delete", {"userId" : adam["id"]})
+
+
     # Create group with ibrahim as admin
     group = {
         "name": f"Group_{suffix}",
@@ -148,3 +198,4 @@ def test_workflow():
     post("/user/delete", "user_delete", {"userId": lewis["id"]})
     post("/user/delete", "user_delete", {"userId": ibrahim["id"]})
 
+    

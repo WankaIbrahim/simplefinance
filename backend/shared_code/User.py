@@ -1,6 +1,6 @@
 import json
 import uuid
-
+from passlib.hash import bcrypt
 
 
 class User:
@@ -8,12 +8,18 @@ class User:
             self, 
             username : str, 
             password : str,
-            id:str | None = None 
+            id:str | None = None,
+            friends : list[str] | None = None,
+            incoming_requests : list[str] | None= None, #storing user ids
+            outgoing_requests : list[str] | None = None # ^^
         ):
         
         self.id = id or str(uuid.uuid4())
         self.username = username
         self.password = password
+        self.friends = friends or []
+        self.incoming_requests = incoming_requests or []
+        self.outgoing_requests = outgoing_requests or []
         
     def to_json(self):
         return json.dumps(self.to_dict())
@@ -22,18 +28,29 @@ class User:
         return {
             "id" : self.id,
             "username" : self.username,
-            "password" : self.password
+            "password" : self.password,
+            "friends" : self.friends,
+            "incoming_requests" : self.incoming_requests,
+            "outgoing_requests" : self.outgoing_requests
         }
     
     @classmethod
     def from_dict(cls, data):
-        if set(data.keys()) != {
-            "username",
-            "password"
-        }:
+        if "username" not in data or "password" not in data:
             raise ValueError("The input keys do not match the ones respective to a user")
 
         return cls(
             username = data["username"],
-            password = data["password"]
+            password = data["password"],
+            friends =  data.get("friends", []),
+            incoming_requests = data.get("incoming_requests", []),
+            outgoing_requests = data.get("outgoing_requests", []),
+            id=data.get("id")
         )
+    
+def hash_password(password: str | str = "") -> str:
+    return bcrypt.hash(password)
+
+def verify_password(password: str | str = "", stored_hashed_password:  str | str = "") -> bool:
+    return bcrypt.verify(password, stored_hashed_password)
+#Password Hashing helper ^
