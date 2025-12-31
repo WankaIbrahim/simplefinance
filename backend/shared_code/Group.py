@@ -106,12 +106,12 @@ class Group:
 def ai_item_suggest_helper(idea: str | None = "", people: int | None = 0, budget: float | None = 0.0, additional_notes: str | None = "") ->list[dict]:
     azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT", "").rstrip("/")
     azure_key = os.getenv("AZURE_OPENAI_KEY", "")
-    deployment_model = "gpt-4o-mini"
+    deployment_name = "simplefinance"
     model_version = "2024-10-21"
 
-    if not azure_endpoint or not azure_key or not deployment_model or not model_version:
+    if not azure_endpoint or not azure_key or not deployment_name or not model_version:
         raise ValueError("Missing Key infromation for the OPEN AI env")
-    url = f"{azure_endpoint}/openai/deployments/{deployment_model}/chat/completions?api-version={model_version}"
+    url = f"{azure_endpoint}/openai/deployments/{deployment_name}/chat/completions?api-version={model_version}"
     headers = {"api-key" : azure_key, "Content-Type" : "application/json"}
     ai_system_prompt_guide = (
         "You need to generate a shopping list of items for a group .\n"
