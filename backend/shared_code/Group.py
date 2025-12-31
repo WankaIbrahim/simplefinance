@@ -119,7 +119,7 @@ def ai_item_suggest_helper(idea: str | None = "", people: int | None = 0, budget
         "Schema:\n"
         "{\n"
         '   "items": [\n'
-        '    {"name" : Roast Chicken (str), "quantity" :  2 (int >= 1), "price" : 22.99 (float >= 0), "url" : null | string}'
+        '    {"name" : Roast Chicken, "quantity" :  2 , "price" : 22.99, "url" : null | string}'
         "    ]\n"
         "}\n"
         "rules are as follows : \n"
@@ -129,7 +129,6 @@ def ai_item_suggest_helper(idea: str | None = "", people: int | None = 0, budget
         "4. a range of 4-12 items ideally, but this is a soft margin, if more are needed add more\n"
         "5. additional_notes are important, consider these equally to the other inputs\n"
         "6. Do not include extra fields other than item name, quantity, price, url \n"
-        "7. do not specify the types don't say float int, string \n"
     )
     user_input_payload = {
         "idea" : idea,
@@ -151,8 +150,15 @@ def ai_item_suggest_helper(idea: str | None = "", people: int | None = 0, budget
     r = requests.post(url, headers=headers, json=body, timeout= 25)
     if r.status_code >= 400: 
         raise RuntimeError(f"Azure Open AI error, code : {r.status_code}: {r.text}")
-    gpt_response_content = r.json()["choices"][0]["messages"]["content"]
-    parsed = json.loads(gpt_response_content)
+    data = r.json()
+    try:    
+        gpt_response_content = data["choices"][0]["message"]["content"]
+    except Exception:
+        raise RuntimeError(f"unexpected model shape response : {data}")
+    try:
+        parsed = json.loads(gpt_response_content)
+    except json.JSONDecodeError:
+        raise RuntimeError(f" Model did not return a JSON same as specified format")
     items = parsed.get("items", [])
     if not isinstance(items, list):
         raise ValueError("Model returned an invalid JSON format")
