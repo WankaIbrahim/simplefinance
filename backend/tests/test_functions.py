@@ -23,12 +23,13 @@ K = {
     "group_user_role_change": "dGst2DxbPun3HBc7sACmmYRlH-BH38jFAuBhPJWpJ-YhAzFumogylw==",
     "group_budget_set": "ErZe7mWprUXR9fTxaz39gicERXFeFjfxno7856M731D-AzFu23R4eA==",
     "group_name_set": "z2iy-teCedFOMW33P1PTFmGt3Cg3oVrAdx8Q4JbniB09AzFunpfr0A==",
-    "respond_friend_request" : "",
-    "send_friend_request" : "",
-    "update_budget": "",
-    "update_item":"",
-    "update_name":"",
-    "vote_item":""
+    
+    "respond_friend_request" : "QM0c7FSUxfpmPmMLuOWXHixzX6ZFhxjA5U_bie5RM8tlAzFuZbLECA==",
+    "send_friend_request" : "eUOdPx5rezFirbTVg1LyqdG-knimJndcuUOPeLxv9Ya8AzFum7ycWg==",
+    "update_budget": "ErZe7mWprUXR9fTxaz39gicERXFeFjfxno7856M731D-AzFu23R4eA==",
+    "update_item":"CrwAfRX0-1wbO7I9FTqABBU5yN3-ShWVQW2tT_UqNP3iAzFusGJJ8g==",
+    "update_name":"z2iy-teCedFOMW33P1PTFmGt3Cg3oVrAdx8Q4JbniB09AzFunpfr0A==",
+    "vote_item":"0QdlQQe3h0epxzoENvWnQr5WGryLP0pHwxkJP6osjfdZAzFuoru5_g=="
 
 }
 
