@@ -18,7 +18,6 @@ def example_register_user():
     print("Example Register User")
     print("STATUS:", r.status_code)
     print("BODY:", repr(r.text))
-    print("HASH:", r.json().get("password"))
 
 def example_login_user():
     FUNCTION_KEY = "JuikdiX0WVLbGFLYMIJt66eUE7PYOMvBX9OiK9scEuRWAzFuwxNc3w=="
@@ -170,6 +169,8 @@ def example_delete_group():
     print("Example Delete Group")
     print("STATUS:", r.status_code)
     print("BODY:", repr(r.text))
+    print("HASH:", r.json().get("password"))
+
 
 def example_group_get():
     FUNCTION_KEY = "IJe1WWPvJCPSCONYAx1STKfhTFH0mt5rwImcTxyXaXX4AzFuJ1CsLw=="
@@ -188,3 +189,4 @@ if __name__ == "__main__":
     example_login_user()
     example_register_user()
     example_add_user()
+    

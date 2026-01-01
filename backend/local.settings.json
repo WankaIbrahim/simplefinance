@@ -9,7 +9,6 @@
     "GroupContainerName": "groups",
     "DeploymentURL" : "simplefinance.azurewebsites.net",
     "FunctionAppKey" : "jHMTQt3HujrD95gb7i8X1p5ovrH-yzStfSeLDHPLMiEnAzFuy3B_jQ==",
-    "AZURE_OPENAI_ENDPOINT" : "https://simplefinance.openai.azure.com/",
-    "AZURE_OPENAI_KEY": ""
+    "GEMINI_API_KEY": "AIzaSyABvn-xFRQ1aDl8MS1KR9Hlup_dUWnuAKc"
   }
 }

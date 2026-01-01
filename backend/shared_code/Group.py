@@ -104,19 +104,17 @@ class Group:
     
 
 def ai_item_suggest_helper(idea: str | None = "", people: int | None = 0, budget: float | None = 0.0, additional_notes: str | None = "") ->list[dict]:
-    azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT", "").rstrip("/")
-    azure_key = os.getenv("AZURE_OPENAI_KEY", "")
-    deployment_name = "simplefinance"
-    model_version = "2024-10-21"
+    google_gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
+    google_gemini_model = "gemini-2.5-flash".strip()
 
-    if not azure_endpoint or not azure_key or not deployment_name or not model_version:
-        raise ValueError("Missing Key infromation for the OPEN AI env")
-    url = f"{azure_endpoint}/openai/deployments/{deployment_name}/chat/completions?api-version={model_version}"
-    headers = {"api-key" : azure_key, "Content-Type" : "application/json"}
+    if not google_gemini_key or not google_gemini_model:
+        raise ValueError("Missing Key infromation for the GEMINI AI env")
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{google_gemini_model}:generateContent"
+    headers = {"x-goog-api-key" : google_gemini_key, "Content-Type" : "application/json"}
     ai_system_prompt_guide = (
         "You need to generate a shopping list of items for a group .\n"
         "Return ONLY valid JSON .\n"
-        "Schema:\n"
+        "Schema example:\n"
         "{\n"
         '   "items": [\n'
         '    {"name" : Roast Chicken, "quantity" :  2 , "price" : 22.99, "url" : null | string}'
@@ -136,25 +134,26 @@ def ai_item_suggest_helper(idea: str | None = "", people: int | None = 0, budget
         "budget" : budget,
         "additional_notes" : additional_notes
     }
-    # Valid roles system, user and assistant
+    # Valid roles system, user and assistant , change body from Azure to gemini
     body = {
-        "messages" : [
-            {"role" : "system", "content": ai_system_prompt_guide},
-            {"role" : "user", "content" : json.dumps(user_input_payload)}
-        ],
-        "max_tokens" : 1000, 
-        #Randomly set ^^
-        "response_format": {"type" : "json_object"}
+        "systemInstruction": {"parts": [{"text" : ai_system_prompt_guide}]},
+        "contents" : [{"role" : "user", "parts" : [{"text": json.dumps(user_input_payload)}]}],
+        "generationConfig": {"maxOutputTokens":  750, "responseMimeType" : "application/json"}
     }
 
     r = requests.post(url, headers=headers, json=body, timeout= 25)
     if r.status_code >= 400: 
-        raise RuntimeError(f"Azure Open AI error, code : {r.status_code}: {r.text}")
+        raise RuntimeError(f"Gemini AI API call error, code : {r.status_code}: {r.text}")
     data = r.json()
     try:    
-        gpt_response_content = data["choices"][0]["message"]["content"]
+        gpt_response_content = data["candidates"][0]["content"]["parts"][0]["text"]
     except Exception:
         raise RuntimeError(f"unexpected model shape response : {data}")
+    if gpt_response_content.startswith("```"):
+        gpt_response_content = gpt_response_content.split("\n", 1)[-1] # remove first ```
+        if gpt_response_content.endswith("```"):
+            gpt_response_content = gpt_response_content[:-3] # remove last 3 ```
+        gpt_response_content = gpt_response_content.strip() # Stripped
     try:
         parsed = json.loads(gpt_response_content)
     except json.JSONDecodeError:
