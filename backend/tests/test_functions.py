@@ -217,9 +217,7 @@ def test_workflow():
 
     #Remove the buyer
     r = post("/group/item/update", "update_item", {
-        "groupId" :group_id,
-        "itemId" : item_id,
-        "updates" : {"buyer" : None}
+        "groupId" :group_id, "itemId" : item_id, "updates" : {"buyer" : None}
     })
     assert r.get("result") is True, r
     g= get(f"/group/get?groupId={group_id}", "group_get")["group"]
@@ -241,6 +239,54 @@ def test_workflow():
     assert r.get("msg") == "Buyer user does not exist", r
 
     #Test vote items
+    #Toggle the voting items to be on
+    r = post("/group/item/vote", "vote_item", {
+        "groupId": group_id, "itemId": item_id, "username" : lewis["username"]
+    })
+    assert r.get("result") is True, r
+
+    g = get(f"/group/get?groupId={group_id}", "group_get")["group"]
+    voted_items = next(i for i in g["items"] if i.get("id") == item_id)
+    assert lewis["username"] in voted_items.get("voted", []), voted_items
+
+    #Toggles the voting items to be off
+    r = post("/group/item/vote", "vote_item", {
+        "groupId" : group_id, "itemId" : item_id, "username" : lewis["username"], "action" : "toggle"
+    })
+    assert r.get("result") is True, r
+
+    g = get(f"/group/get?groupId={group_id}", "group_get")["group"]
+    voted_items = next(i for i in g["items"] if i.get("id") == item_id)
+    assert lewis["username"] not in voted_items.get("voted", []), voted_items
+
+    post("/group/item/vote", "vote_item", {
+        "groupId": group_id, "itemId": item_id, "username": lewis["username"], "action": "upvote"
+    })
+    post("/group/item/vote", "vote_item", {
+        "groupId": group_id, "itemId": item_id, "username" : lewis["username"], "action":  "upvote"
+    })
+    ##No matter how many times a call for one user there is it should only act once to stop mass voting one per person
+    #so count it and if more than one then raise an error
+    g = get(f"/group/get?groupId={group_id}", "group_get")["group"]
+    voted_items = next(i for i in g["items"] if i.get("id") == item_id)
+    assert voted_items["voted"].count(lewis["username"]) == 1, voted_items
+
+
+    #Downvote , so check if lewis is not in the list for voted when switching from voted to not voted
+    r = post("/group/item/vote", "vote_item", {
+        "groupId" : group_id, "itemId": item_id, "username" : lewis["username"], "action": "downvote"
+    })
+    assert r.get("result") is True, r
+    g = get(f"/group/get?groupId={group_id}", "group_get")["group"]
+    voted_items = next(i for i in g["items"] if i.get("id") == item_id)
+    assert lewis["username"] not in voted_items.get("voted", []), voted_items
+
+    #Check when not item id
+    r = post("/group/item/vote", "vote_item", {
+        "groupId": group_id, "itemId": "no_item_id", "username": lewis["username"]
+    })
+    assert r.get("result") is False, r
+    assert r.get("msg") == "Item not found", r
 
     # Remove Lewis
     post("/group/user/remove", "group_user_remove", {
