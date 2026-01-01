@@ -461,7 +461,7 @@ def update_budget(req: func.HttpRequest) -> func.HttpResponse:
 def update_name(req: func.HttpRequest) -> func.HttpResponse:
     try:
         data = req.get_json()
-        logging.info(f"Request to delete group: {data}")
+        logging.info(f"Request to update group name: {data}")
         
         groupId = data["groupId"]
         name = data["name"]
@@ -494,7 +494,7 @@ def update_name(req: func.HttpRequest) -> func.HttpResponse:
 def delete_group(req: func.HttpRequest) -> func.HttpResponse:
     try:
         data = req.get_json()
-        logging.info(f"Request to update group name: {data}")
+        logging.info(f"Request to delete group: {data}")
         
         groupId = data["groupId"]
         
