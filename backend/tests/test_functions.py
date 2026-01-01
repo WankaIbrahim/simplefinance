@@ -23,7 +23,7 @@ K = {
     "group_user_role_change": "dGst2DxbPun3HBc7sACmmYRlH-BH38jFAuBhPJWpJ-YhAzFumogylw==",
     "group_budget_set": "ErZe7mWprUXR9fTxaz39gicERXFeFjfxno7856M731D-AzFu23R4eA==",
     "group_name_set": "z2iy-teCedFOMW33P1PTFmGt3Cg3oVrAdx8Q4JbniB09AzFunpfr0A==",
-    
+    "group_items_ai_suggestion":"",
     "respond_friend_request" : "QM0c7FSUxfpmPmMLuOWXHixzX6ZFhxjA5U_bie5RM8tlAzFuZbLECA==",
     "send_friend_request" : "eUOdPx5rezFirbTVg1LyqdG-knimJndcuUOPeLxv9Ya8AzFum7ycWg==",
     "update_budget": "ErZe7mWprUXR9fTxaz39gicERXFeFjfxno7856M731D-AzFu23R4eA==",
@@ -121,13 +121,24 @@ def test_workflow():
 
 
     # Create group with ibrahim as admin
+    item_id = f"item_{suffix}"
     group = {
         "name": f"Group_{suffix}",
         "guests": [],
         "users": [],
         "admins": [{"id": ibrahim["id"], "username": ibrahim["username"]}],
         "budget": 0,
-        "items": []
+        "items": [
+            {
+                "id": item_id,
+                "name" : "desk chair",
+                "price":  "25.50",
+                "quantity": "2",
+                "url": "",
+                "purchased": False,
+                "voted" : []
+            }
+        ]
     }
     
     group_create_response = post("/group/create", "group_create", group)
@@ -179,8 +190,58 @@ def test_workflow():
     assert g["name"] == new_name
     
     # TODO
-    # Add tests regarding items
+    # #Create group with items 
+    r = post("/group/item/update", "update_item", {
+        "groupId": group_id,
+        "itemId" : item_id,
+        "updates":{
+            "name" : "secretlab chair",
+            "price": 28.50,
+            "quantity" : 5,
+            "url" : "https://secretlab.co.uk/collections/promotions?utm_source=bing&utm_medium=cpc&utm_content=gamechairs-pc&utm_campaign=uk-s-generic_gaming&msclkid=04607f56f7091dfab2c7160057257c63&utm_term=pc+gaming+chair#titan_evo-section",
+            "purchased" : True,
+            "buyer" : {"id" : lewis["id"], "username" : lewis["username"]}
+        }
+    })
+
+    assert r.get("result") is True, r
+    g = get(f"/group/get?groupId={group_id}", "group_get")["group"]
+    updated = next(i for i in g["items"] if i.get("id") == item_id)
+    assert updated["name"] == "secretlab chair"
+    assert updated["price"] == 28.50
+    assert updated["quantity"] == 5
+    assert updated["url"] == "https://secretlab.co.uk/collections/promotions?utm_source=bing&utm_medium=cpc&utm_content=gamechairs-pc&utm_campaign=uk-s-generic_gaming&msclkid=04607f56f7091dfab2c7160057257c63&utm_term=pc+gaming+chair#titan_evo-section"
+    assert updated["purchased"] == True
+    assert updated["buyer"]["id"] == lewis["id"]
+    assert updated["buyer"]["username"] == lewis["username"]
+
+    #Remove the buyer
+    r = post("/group/item/update", "update_item", {
+        "groupId" :group_id,
+        "itemId" : item_id,
+        "updates" : {"buyer" : None}
+    })
+    assert r.get("result") is True, r
+    g= get(f"/group/get?groupId={group_id}", "group_get")["group"]
+    updated = next(i for i in g["items"] if i.get("id") == item_id)
+    assert updated["buyer"] is None
+
+    #Item not found
+    r = post("/group/item/update", "update_item", {
+        "groupId" : group_id, "itemId": "SOme_YAP", "updates" : {"name" : "XX"}
+    })
+    assert r.get("result") is False, r
+    assert r.get("msg") == "Item not found", r
     
+    # Update an item
+    r = post("/group/item/update", "update_item", {
+        "groupId": group_id, "itemId": item_id, "updates": {"buyer" : {"id" : "not_real_user", "username" : "bobalol"}}
+    })
+    assert r.get("result") is False, r 
+    assert r.get("msg") == "Buyer user does not exist", r
+
+    #Test vote items
+
     # Remove Lewis
     post("/group/user/remove", "group_user_remove", {
         "groupId": group_id,
@@ -198,5 +259,7 @@ def test_workflow():
     # Delete Test Users
     post("/user/delete", "user_delete", {"userId": lewis["id"]})
     post("/user/delete", "user_delete", {"userId": ibrahim["id"]})
+
+    
 
     
