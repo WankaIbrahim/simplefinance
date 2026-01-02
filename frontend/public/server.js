@@ -13,6 +13,7 @@ var app = new Vue({
 
         // Data to update user
         newPassword: '',
+        inputEmail: '',
 
         // Status message for login/register
         statusMessage: '',
@@ -90,6 +91,11 @@ var app = new Vue({
             this.touchEndX = e.changedTouches[0].screenX;
             this.handleSwipe();
         });
+        
+        if (window.location.pathname === '/settings' && this.userId) {
+            this.fetchUserProfile(this.userId);
+        }
+
 
     },
     beforeDestroy() {
@@ -313,6 +319,7 @@ var app = new Vue({
                     this.searchUsername = data.user.username;
                     this.searchUserId = data.user.id;
                     this.searchUserPfp = data.user.pfpUrl || '';
+                    this.inputEmail = data.user.email || '';
                 }
             } catch (error) {
                 console.error("Error loading profile:", error);
@@ -517,25 +524,64 @@ var app = new Vue({
             this.mobileMenuOpen = false;
         },
         async updateProfile() {
+            if (!this.userId) {
+                this.statusMessage = "You must be logged in";
+                this.statusColor = "red";
+                return;
+            }
+
             try {
+                const updates = {};
+
+                if (this.newPassword && this.newPassword.trim().length > 0) {
+                    updates.password = this.newPassword.trim();
+                }
+
+                if (this.inputEmail && this.inputEmail.trim().length > 0) {
+                    updates.email = this.inputEmail.trim();
+                }
+
+                if (this.inputUsername && this.inputUsername.trim().length > 0) {
+                    updates.username = this.inputUsername.trim();
+                }
+
+                if (Object.keys(updates).length === 0) {
+                    this.statusMessage = "Nothing to update";
+                    this.statusColor = "red";
+                    return;
+                }
+
                 const response = await fetch('/update-user', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         userId: this.userId,
-                        updates: {
-                            password: this.newPassword || undefined
-                        }
+                        updates
                     })
                 });
+
                 const data = await response.json();
+
                 if (data.result) {
-                    this.statusMessage = "Password updated successfully";
-                    this.statusColor = 'green';
+                    this.statusMessage = "Updated successfully";
+                    this.statusColor = "green";
+
+                    if (data.username) {
+                        localStorage.setItem('username', data.username);
+                        this.inputUsername = data.username;
+                    }
+
+                    this.newPassword = "";
+                } else {
+                    this.statusMessage = data.msg || "Update failed";
+                    this.statusColor = "red";
                 }
             } catch (error) {
                 console.error("Error updating profile:", error);
+                this.statusMessage = "Update failed";
+                this.statusColor = "red";
             }
         }
+
     }
 });

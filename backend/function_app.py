@@ -1014,11 +1014,74 @@ def update_user(req: func.HttpRequest) -> func.HttpResponse:
             )
 
         user_doc = items[0]
+        old_username = user_doc.get("username")
+
         if "password" in data and data["password"]:
             user_doc["password"] = data["password"]
-            
+
         if "pfpUrl" in data:
-            user_doc["pfpUrl"] = data["pfpUrl"] 
+            user_doc["pfpUrl"] = data["pfpUrl"]
+
+        if "email" in data:
+            user_doc["email"] = data["email"]
+
+        if "bio" in data:
+            user_doc["bio"] = data["bio"]
+
+        new_username = data.get("username")
+        if new_username:
+            new_username = new_username.strip()
+
+        if new_username and new_username != old_username:
+            existing = list(UserContainerProxy.query_items(
+                query="SELECT TOP 1 * FROM c WHERE c.username = @username",
+                parameters=[{"name": "@username", "value": new_username}],
+                enable_cross_partition_query=True
+            ))
+            if existing:
+                return func.HttpResponse(
+                    json.dumps({"result": False, "msg": "Username already taken"}),
+                    status_code=409,
+                    mimetype="application/json"
+                )
+            new_doc = dict(user_doc)
+            new_doc["username"] = new_username
+
+            UserContainerProxy.create_item(body=new_doc)
+
+            UserContainerProxy.delete_item(item=user_doc["id"], partition_key=old_username)
+
+            groups = list(GroupContainerProxy.query_items(
+                query="""
+                SELECT * FROM c
+                WHERE ARRAY_CONTAINS(c.admins, {"username": @username}, true)
+                   OR ARRAY_CONTAINS(c.users,  {"username": @username}, true)
+                   OR ARRAY_CONTAINS(c.guests, {"username": @username}, true)
+                """,
+                parameters=[{"name": "@username", "value": old_username}],
+                enable_cross_partition_query=True
+            ))
+
+            def replace_username(arr):
+                out = []
+                for u in (arr or []):
+                    if isinstance(u, dict) and u.get("id") == user_id:
+                        out.append({"id": u.get("id"), "username": new_username})
+                    else:
+                        out.append(u)
+                return out
+
+            for g in groups:
+                g["admins"] = replace_username(g.get("admins"))
+                g["users"]  = replace_username(g.get("users"))
+                g["guests"] = replace_username(g.get("guests"))
+                GroupContainerProxy.replace_item(item=g["id"], body=g)
+
+            return func.HttpResponse(
+                json.dumps({"result": True, "msg": "OK", "username": new_username}),
+                status_code=200,
+                mimetype="application/json"
+            )
 
         UserContainerProxy.replace_item(item=user_doc["id"], body=user_doc)
 
@@ -1027,12 +1090,14 @@ def update_user(req: func.HttpRequest) -> func.HttpResponse:
             status_code=200,
             mimetype="application/json"
         )
+
     except Exception as e:
         return func.HttpResponse(
             json.dumps({"result": False, "msg": str(e)}),
             status_code=400,
             mimetype="application/json"
         )
+
     
 @app.route(route="group/items/suggest", methods=[func.HttpMethod.POST], auth_level=func.AuthLevel.FUNCTION)
 def group_items_ai_suggestion(req: func.HttpRequest) -> func.HttpResponse:
