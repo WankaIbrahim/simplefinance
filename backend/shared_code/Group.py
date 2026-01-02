@@ -154,7 +154,7 @@ def ai_item_suggest_helper(idea: str | None = "", people: int | None = 0, budget
     body = {
         "systemInstruction": {"parts": [{"text" : ai_system_prompt_guide}]},
         "contents" : [{"role" : "user", "parts" : [{"text": json.dumps(user_input_payload)}]}],
-        "generationConfig": {"temperature" : 0.3, "maxOutputTokens":  1500, "responseMimeType" : "application/json", "responseSchema" : response_schema}
+        "generationConfig": {"temperature" : 0.3, "maxOutputTokens":  3000, "responseMimeType" : "application/json", "responseSchema" : response_schema}
     }
 
     r = requests.post(url, headers=headers, json=body, timeout= 25)
