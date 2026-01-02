@@ -28,6 +28,11 @@ var app = new Vue({
         pfpFile: null,
         pfpStatus: '',
 
+        // Bio
+        searchUserBio: '',
+        bioDraft: '',
+        bioStatus: '',
+        bioSaving: false,
 
         // Data for group view
         groupNotFound: false,
@@ -320,11 +325,49 @@ var app = new Vue({
                     this.searchUserId = data.user.id;
                     this.searchUserPfp = data.user.pfpUrl || '';
                     this.inputEmail = data.user.email || '';
+                    this.searchUserBio = data.user.bio || '';
+                    this.bioDraft = this.searchUserBio; 
                 }
             } catch (error) {
                 console.error("Error loading profile:", error);
             }
         },
+
+        async saveBio() {
+            if (!this.userId || this.searchUserId != this.userId) return;
+            
+            try {
+                this.bioSaving = true;
+                this.bioStatus = "";
+
+                const response = await fetch('/update-user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: this.userId,
+                        updates: {
+                            bio: this.bioDraft
+                        }
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.result) {
+                    this.searchUserBio = this.bioDraft;
+                    this.bioStatus = "Saved!";
+                } else {
+                    this.bioStatus = data.msg || "Failed to save bio";
+                }
+            } catch (error) {
+                console.error("Error saving bio:", error);
+                this.bioStatus = "Failed to save bio";
+            } finally {
+                this.bioSaving = false;
+                setTimeout(() => { this.bioStatus = ""; }, 2000);
+            }
+        },
+
         async upvote(item) {
             try {
                 const response = await fetch('/vote-item', {

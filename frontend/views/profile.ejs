@@ -54,6 +54,30 @@
                             <span class="stat-label">Status</span>
                         </div>
                     </div>
+                    <div class="card" style="margin-top: 16px;">
+                        <h3>Bio</h3>
+
+                        <p v-if="searchUserId != userId" class="text-muted" style="margin: 0;">
+                            {{ searchUserBio || "No bio yet." }}
+                        </p>
+
+                        <div v-else>
+                            <textarea
+                            v-model="bioDraft"
+                            rows="3"
+                            class="form-control"
+                            placeholder="Write something about yourself..."
+                            style="width: 100%; resize: vertical;"
+                            ></textarea>
+                            <div style="display:flex; gap:10px; margin-top:10px; align-items:center;">
+                            <button class="btn btn-outline-primary" @click="saveBio" :disabled="bioSaving">
+                                {{ bioSaving ? "Saving..." : "Save Bio" }}
+                            </button>
+                            <span v-if="bioStatus" class="text-muted">{{ bioStatus }}</span>
+                            </div>
+                        </div>
+                    </div>
+
 
                     <div class="profile-actions">
                         <div v-if="searchUserId == userId" class="action-group">
