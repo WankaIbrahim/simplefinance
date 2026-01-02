@@ -34,7 +34,7 @@
                 <div class="profile-card">
                     <div class="profile-header">
                         <div class="avatar-container">
-                            <img src="https://thispersondoesnotexist.com/" alt="Profile Picture">
+                            <img :src="searchUserPfp || '/static/default-avatar.png'" alt="Profile Picture">
                         </div>
                         <h1 class="username">{{ searchUsername || 'Loading...' }}</h1>
                         <span class="user-id-badge" v-if="searchUserId">ID: {{ searchUserId }}</span>
@@ -58,6 +58,13 @@
                     <div class="profile-actions">
                         <div v-if="searchUserId == userId" class="action-group">
                             <button class="btn btn-primary" onclick="window.location.href='/settings'">Edit Profile</button>
+                            <div style="margin-top:12px; display:flex; flex-direction:column; gap:8px; align-items:flex-start;">
+                                <input type="file" accept="image/*" @change="onPfpSelected" />
+                                <button class="btn btn-outline-primary" @click="uploadPfp" :disabled="!pfpFile">
+                                    Update user PFP
+                                </button>
+                                <p v-if="pfpStatus" class="text-muted" style="margin:0;">{{ pfpStatus }}</p>
+                            </div>
                         </div>
 
                         <div v-else class="action-group">

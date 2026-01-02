@@ -22,6 +22,12 @@ var app = new Vue({
         searchUsername: '',
         searchUserId: null,
 
+        // Profile picture
+        searchUserPfp: '',
+        pfpFile: null,
+        pfpStatus: '',
+
+
         // Data for group view
         groupNotFound: false,
         activeGroup: null,
@@ -306,6 +312,7 @@ var app = new Vue({
                 if (data.result && data.user) {
                     this.searchUsername = data.user.username;
                     this.searchUserId = data.user.id;
+                    this.searchUserPfp = data.user.pfpUrl || '';
                 }
             } catch (error) {
                 console.error("Error loading profile:", error);
@@ -332,6 +339,79 @@ var app = new Vue({
                 console.error('Error upvoting:', error);
             }
         },
+        
+
+        onPfpSelected(e) {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+
+            const okTypes = ["image/jpeg", "image/png", "image/webp"];
+            if (!okTypes.includes(file.type)) {
+                this.pfpStatus = "Please upload JPG, PNG, or WEBP.";
+                this.pfpFile = null;
+                e.target.value = "";
+                return;
+            }
+
+            if (file.size > 2 * 1024 * 1024) {
+                this.pfpStatus = "Max file size is 2MB.";
+                this.pfpFile = null;
+                e.target.value = "";
+                return;
+            }
+
+            this.pfpFile = file;
+            this.pfpStatus = `Selected: ${file.name}`;
+        },
+
+        async uploadPfp() {
+            if (!this.pfpFile) return;
+            if (!this.userId) {
+                this.pfpStatus = "You must be logged in.";
+                return;
+            }
+
+            try {
+                this.pfpStatus = "Uploading...";
+                const form = new FormData();
+                form.append("pfp", this.pfpFile);
+                form.append("userId", this.userId); 
+
+                const uploadRes = await fetch("/upload-pfp", {
+                    method: "POST",
+                    body: form
+                });
+
+                const uploadData = await uploadRes.json();
+                if (!uploadRes.ok || !uploadData.result) {
+                    throw new Error(uploadData.msg || "Upload failed");
+                }
+
+                const pfpUrl = uploadData.pfpUrl;
+
+                const updateRes = await fetch("/update-user", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        userId: this.userId,
+                        updates: { pfpUrl }
+                    })
+                });
+
+                const updateData = await updateRes.json();
+                if (!updateData.result) {
+                    throw new Error(updateData.msg || "Failed to save profile picture");
+                }
+
+                this.searchUserPfp = pfpUrl;
+                this.pfpFile = null;
+                this.pfpStatus = "Profile picture updated!";
+            } catch (err) {
+                console.error("PFP upload error:", err);
+                this.pfpStatus = err.message || "Failed to update profile picture";
+            }
+        },
+
 
         async downvote(item) {
             try {

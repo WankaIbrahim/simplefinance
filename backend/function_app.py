@@ -992,26 +992,38 @@ def update_user(req: func.HttpRequest) -> func.HttpResponse:
         data = req.get_json()
         logging.info(f"Request to update user: {data}")
 
+        user_id = data.get("userId")
+        if not user_id:
+            return func.HttpResponse(
+                json.dumps({"result": False, "msg": "userId is required"}),
+                status_code=400,
+                mimetype="application/json"
+            )
+
         items = list(UserContainerProxy.query_items(
-            query="SELECT * FROM c WHERE c.id = @id",
-            parameters=[{"name": "@id", "value": data["userId"]}],
+            query="SELECT TOP 1 * FROM c WHERE c.id = @id",
+            parameters=[{"name": "@id", "value": user_id}],
             enable_cross_partition_query=True
         ))
 
+        if not items:
+            return func.HttpResponse(
+                json.dumps({"result": False, "msg": "User does not exist"}),
+                status_code=404,
+                mimetype="application/json"
+            )
 
         user_doc = items[0]
-        if "password" in data:
+        if "password" in data and data["password"]:
             user_doc["password"] = data["password"]
-        # if "email" in data:
-        #     user_doc["email"] = data["email"]
+            
+        if "pfpUrl" in data:
+            user_doc["pfpUrl"] = data["pfpUrl"] 
 
-        UserContainerProxy.replace_item(item=user_doc["id"], body=user_doc)        
+        UserContainerProxy.replace_item(item=user_doc["id"], body=user_doc)
 
         return func.HttpResponse(
-            json.dumps({
-                "result": True, 
-                "msg": "OK",
-            }),
+            json.dumps({"result": True, "msg": "OK"}),
             status_code=200,
             mimetype="application/json"
         )

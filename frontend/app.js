@@ -9,9 +9,36 @@ const fetch = (...args) =>
 
 const BACKEND_ENDPOINT = process.env.BACKEND || 'http://localhost:8181';
 const AZURE_API_KEY = process.env.AZURE_API_KEY || null;
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
+
 
 app.set('view engine', 'ejs');
 app.use('/static', express.static('public'));
+const pfpUploadDir = path.join(__dirname, 'public', 'uploads', 'pfp');
+fs.mkdirSync(pfpUploadDir, { recursive: true });
+
+const pfpStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, pfpUploadDir),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const allowed = ['.jpg', '.jpeg', '.png', '.webp'];
+    const safeExt = allowed.includes(ext) ? ext : '.png';
+    const userId = (req.body && req.body.userId) ? String(req.body.userId) : 'user';
+    cb(null, `${userId}-${Date.now()}${safeExt}`);
+  }
+});
+
+const uploadPfp = multer({
+  storage: pfpStorage,
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const ok = ['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype);
+    cb(ok ? null : new Error('Invalid file type'), ok);
+  }
+});
+
 app.use(express.json());
 
 app.get('/', (req, res) => {
@@ -120,6 +147,21 @@ app.post('/vote-item', async (req, res) => {
     const result = await azureModel.voteItem(groupId, itemId, username, action);
     res.json(result);
 });
+
+app.post('/upload-pfp', uploadPfp.single('pfp'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ result: false, msg: 'No file uploaded' });
+    }
+
+    const pfpUrl = `/static/uploads/pfp/${req.file.filename}`;
+
+    return res.json({ result: true, pfpUrl });
+  } catch (e) {
+    return res.status(500).json({ result: false, msg: e.message || 'Upload failed' });
+  }
+});
+
 
 async function callAzureAPI(endpoint, method, body = null) {
   const url = `${BACKEND_ENDPOINT}${endpoint}`;
