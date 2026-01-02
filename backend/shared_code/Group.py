@@ -113,13 +113,11 @@ def ai_item_suggest_helper(idea: str | None = "", people: int | None = 0, budget
     headers = {"x-goog-api-key" : google_gemini_key, "Content-Type" : "application/json"}
     ai_system_prompt_guide = (
         "You need to generate a shopping list of items for a group .\n"
-        "Return ONLY valid JSON .\n"
+        "Return ONLY a signle valid JSON without markdown, code fencing or commentts and use double qotes for all keys and strings .\n"
         "Schema example:\n"
         "{\n"
         '   "items": [\n'
-        '    {"name" : Roast Chicken, "quantity" :  2 , "price" : 22.99, "url" : null | string}'
-        "    ]\n"
-        "}\n"
+        '   {"name":"Roast Chicken", "quantity":2 , "price":22.99, "url":null}]}\n'
         "rules are as follows : \n"
         "1. Keep items relevant to the scenario\n"
         "2. The price is per unit in GBP\n"
@@ -134,11 +132,29 @@ def ai_item_suggest_helper(idea: str | None = "", people: int | None = 0, budget
         "budget" : budget,
         "additional_notes" : additional_notes
     }
+    response_schema = {
+        "type": "OBJECT",
+        "properties": {
+            "items": {
+                "type" : "ARRAY",
+                "items": {
+                    "type": "OBJECT",
+                    "properties" : {
+                        "name": {"type" : "STRING"},
+                        "quantity" : {"type" : "INTEGER"},
+                        "price" : {"type": "NUMBER"},
+                        "url" : {"type":  "STRING", "nullable" : True}
+                    }, "required" : ["name", "quantity", "price", "url"],
+                },
+            }
+        },
+        "required" : ["items"],
+    }
     # Valid roles system, user and assistant , change body from Azure to gemini
     body = {
         "systemInstruction": {"parts": [{"text" : ai_system_prompt_guide}]},
         "contents" : [{"role" : "user", "parts" : [{"text": json.dumps(user_input_payload)}]}],
-        "generationConfig": {"maxOutputTokens":  750, "responseMimeType" : "application/json"}
+        "generationConfig": {"temperature" : 0.3, "maxOutputTokens":  1500, "responseMimeType" : "application/json", "responseSchema" : response_schema}
     }
 
     r = requests.post(url, headers=headers, json=body, timeout= 25)
@@ -146,7 +162,9 @@ def ai_item_suggest_helper(idea: str | None = "", people: int | None = 0, budget
         raise RuntimeError(f"Gemini AI API call error, code : {r.status_code}: {r.text}")
     data = r.json()
     try:    
+        logging.info("Gemini full response (truncated): %s", json.dumps(data)[:1500])
         gpt_response_content = data["candidates"][0]["content"]["parts"][0]["text"]
+        logging.info("Gemini raw text: %s", gpt_response_content[:500])   
     except Exception:
         raise RuntimeError(f"unexpected model shape response : {data}")
     if gpt_response_content.startswith("```"):

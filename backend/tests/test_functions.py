@@ -23,7 +23,7 @@ K = {
     "group_user_role_change": "dGst2DxbPun3HBc7sACmmYRlH-BH38jFAuBhPJWpJ-YhAzFumogylw==",
     "group_budget_set": "ErZe7mWprUXR9fTxaz39gicERXFeFjfxno7856M731D-AzFu23R4eA==",
     "group_name_set": "z2iy-teCedFOMW33P1PTFmGt3Cg3oVrAdx8Q4JbniB09AzFunpfr0A==",
-    "group_items_ai_suggestion":"",
+    "group_items_ai_suggestion":"6AGJx5XbGT_qjeNJcjmtjDVkVgnSyWZ93rTKEUctEHlhAzFu3w3XhQ==",
     "respond_friend_request" : "QM0c7FSUxfpmPmMLuOWXHixzX6ZFhxjA5U_bie5RM8tlAzFuZbLECA==",
     "send_friend_request" : "eUOdPx5rezFirbTVg1LyqdG-knimJndcuUOPeLxv9Ya8AzFum7ycWg==",
     "update_budget": "ErZe7mWprUXR9fTxaz39gicERXFeFjfxno7856M731D-AzFu23R4eA==",
@@ -299,6 +299,25 @@ def test_workflow():
     assert not _has_username(g, "guests", lewis["username"])
     assert not _has_username(g, "admins", lewis["username"])
     
+    #API Testing
+    r = post("/group/items/suggest", "group_items_ai_suggestion", {
+        "groupId": group_id,
+        "idea": "Camping trip equipment",
+        "people": 3,
+        "budget": 75,
+        "additional_notes": "we have sleeping bags, we need tents and other equipment",
+        "addToGroup" : False
+    })
+    assert r["result"] is True, r
+    assert isinstance(r.get("items"), list) and len(r["items"]) >=1, r
+
+    for i in r["items"]:
+        assert "id" in i
+        assert "url" in i
+        assert isinstance(i.get("name"), str) and i["name"].strip()
+        assert isinstance(i.get("quantity"), int) and i.get("quantity", 0 ) >=1 
+        assert isinstance(i.get("price"), (int, float)) and i.get("price", -1) >= 0
+
     # Delete group
     post("/group/delete", "group_delete", {"groupId": group_id})
     
