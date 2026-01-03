@@ -73,6 +73,9 @@
                             <button class="btn btn-outline-primary" @click="saveBio" :disabled="bioSaving">
                                 {{ bioSaving ? "Saving..." : "Save Bio" }}
                             </button>
+                            <div v-if="searchUserId == userId" class="action-group">
+                                <button class="btn btn-primary" onclick="window.location.href='/settings'">Edit Profile</button>
+                           </div>
                             <span v-if="bioStatus" class="text-muted">{{ bioStatus }}</span>
                             </div>
                         </div>
@@ -80,17 +83,6 @@
 
 
                     <div class="profile-actions">
-                        <div v-if="searchUserId == userId" class="action-group">
-                             <button class="btn btn-primary" onclick="window.location.href='/settings'">Edit Profile</button>
-                             <div style="margin-top:12px; display:flex; flex-direction:column; gap:8px; align-items:flex-start;">
-                                <input type="file" accept="image/*" @change="onPfpSelected" />
-                                <button class="btn btn-outline-primary" @click="uploadPfp" :disabled="!pfpFile">
-                                    Update user PFP
-                                </button>
-                                <p v-if="pfpStatus" class="text-muted" style="margin:0;">{{ pfpStatus }}</p>
-                            </div>
-                        </div>
-
                         <div v-else class="action-group">
                             
                             <template v-if="isFriend">

@@ -20,7 +20,7 @@
         <div class="settings-card">
           <div class="settings-head">
             <h1>Settings</h1>
-            <p class="muted">Manage your profile, security, and preferences.</p>
+            <p class="muted">Manage your username, email, password and profile picture</p>
           </div>
 
           <section class="settings-section">
@@ -42,12 +42,19 @@
 
               <div class="field">
                 <label for="email">Password</label>
-                <input id="password" type="text" placeholder="New Password" v-model="newPassword"/>
+                <input id="password" type="text" placeholder="New Password" v-model="newPassword" />
               </div>
-                            <div v-if="statusMessage" class="mt-3 text-center small fw-bold"
-                                :style="{ color: statusColor }" style="padding:5px;">
-                                {{ statusMessage }}
-                            </div>
+              <div v-if="statusMessage" class="mt-3 text-center small fw-bold" :style="{ color: statusColor }"
+                style="padding:5px;">
+                {{ statusMessage }}
+              </div>
+              <div style="margin-top:12px; display:flex; flex-direction:column; gap:8px; align-items:flex-start;">
+                <input type="file" accept="image/*" @change="onPfpSelected" />
+                <button class="btn btn-outline-primary" @click="uploadPfp" :disabled="!pfpFile">
+                    Update user PFP
+                </button>
+                <p v-if="pfpStatus" class="text-muted" style="margin:0;">{{ pfpStatus }}</p>
+            </div>
               <button class="btn btn-secondary" @click="updateProfile">
                 Change details
               </button>
@@ -55,9 +62,9 @@
           </section>
 
 
-          <hr class="divider" />
-
-          <section class="settings-section">
+          <!-- <hr class="divider" /> -->
+          <!-- Commenting this because we are not using it -->
+          <!-- <section class="settings-section">
             <div class="section-title">
               <h2>Preferences</h2>
               <p class="muted">Customize your experience.</p>
@@ -78,7 +85,7 @@
                 </label>
               </div>
             </div>
-          </section>
+          </section> -->
 
           <div class="settings-actions">
             <button class="btn btn-primary">
