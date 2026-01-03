@@ -193,7 +193,29 @@ const azureModel = {
             console.error("Azure removeFriend Error:", error.message);
             return { result: false, msg: "Failed to remove friend" };
         }
-    }
+    },
+
+    searchUsers: async (query) => {
+        try {
+            const response = await axios.get(`${BASE_URL}/user/search`, {
+                params: { q: query }
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Azure searchUsers Error:", error.message);
+            return { result: false, users: [] };
+        }
+    },
+
+    createGroup: async (groupData) => {
+        try {
+            const response = await axios.post(`${BASE_URL}/group/create`, groupData);
+            return response.data;
+        } catch (error) {
+            console.error("Azure createGroup Error:", error.message);
+            return { result: false, msg: "Failed to create group" };
+        }
+    },
 };
 
 module.exports = azureModel;

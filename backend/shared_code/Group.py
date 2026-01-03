@@ -47,6 +47,7 @@ class Group:
         users: list[dict] | None = None,
         budget: int | None = 0,
         items: list[Item] | None= None,
+        description: str | None = ""
         ):
         
         self.groupId = str(groupId) if groupId is not None else str(uuid.uuid4())
@@ -57,6 +58,7 @@ class Group:
         self.users = users or []
         self.budget = budget
         self.items = items or []
+        self.description = description
 
     def to_json(self):
         return json.dumps(self.to_dict())
@@ -70,7 +72,8 @@ class Group:
             "users" : self.users,
             "admins" : self.admins,
             "budget" : self.budget,
-            "items" : [item.to_dict() for item in self.items]  
+            "items" : [item.to_dict() for item in self.items],
+            "description": self.description
         }
     
     @classmethod    
@@ -81,7 +84,8 @@ class Group:
             "users",
             "admins",
             "budget",
-            "items"
+            "items",
+            "description"
         }:
             raise ValueError("Input Keys for this dict is wrong")
         
@@ -100,6 +104,7 @@ class Group:
             admins=data.get("admins"),
             budget=data.get("budget", 0),
             items=[Item(**d) for d in data.get("items", [])],
+            description=data.get("description", "")
         )
     
 

@@ -38,7 +38,7 @@
                     </div>
                     <div class="group-header">
                         <h1>{{activeGroup.name}}</h1>
-                        <p class="description">{{ groupDescription || "No description" }}</p>
+                        <p class="description" style="color:black">{{ activeGroup.description || "No description" }}</p>
                     </div>
 
                     <div v-if="isCurrentUserAdmin" class="admin-toolbar card">

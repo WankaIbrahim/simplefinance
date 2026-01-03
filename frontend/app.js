@@ -181,6 +181,18 @@ app.post('/upload-pfp', uploadPfp.single('pfp'), async (req, res) => {
   }
 });
 
+app.get('/user/search', async (req, res) => {
+  const { q } = req.query;
+  const result = await azureModel.searchUsers(q);
+  res.json(result);
+});
+
+app.post('/group/create', async (req, res) => {
+  console.log("Create Group Request:", req.body);
+  const result = await azureModel.createGroup(req.body);
+  res.json(result);
+});
+
 
 async function callAzureAPI(endpoint, method, body = null) {
   const url = `${BACKEND_ENDPOINT}${endpoint}`;

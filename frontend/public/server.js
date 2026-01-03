@@ -64,6 +64,26 @@ var app = new Vue({
         friends: [],
         incomingRequests: [],
         outgoingRequests: [],
+
+        // group creation logic
+        showCreateGroupModal: false,
+        
+        newGroup: {
+            name: '',
+            description: '',
+            budget: 0
+        },
+        
+        
+        memberSearchQuery: '',
+        memberSearchResults: [],
+        searchLoading: false,
+        activeSearchRole: 'users',
+        
+        // Lists of selected people
+        selectedAdmins: [],
+        selectedUsers: [],
+        selectedGuests: []
     },
     mounted() {
         if (localStorage.getItem('loggedIn') === 'true') {
@@ -753,6 +773,98 @@ var app = new Vue({
                 }
             } catch (e) { console.error(e); }
         },
+        openCreateGroupModal() {
+            this.showCreateGroupModal = true;
+            this.newGroup = { name: '', description: '', budget: 0 };
+            this.selectedAdmins = [{ id: this.userId, username: this.inputUsername }]; // Add self as admin
+            this.selectedUsers = [];
+            this.selectedGuests = [];
+            this.memberSearchQuery = '';
+            this.memberSearchResults = [];
+        },
+
+        async searchMembers() {
+            if (this.memberSearchQuery.length < 2) {
+                this.memberSearchResults = [];
+                return;
+            }
+            this.searchLoading = true;
+            try {
+                const response = await fetch(`/user/search?q=${encodeURIComponent(this.memberSearchQuery)}`);
+                const data = await response.json();
+                
+                // Filter out people already selected in ANY list
+                const allSelectedIds = [
+                    ...this.selectedAdmins, 
+                    ...this.selectedUsers, 
+                    ...this.selectedGuests
+                ].map(u => u.id);
+
+                this.memberSearchResults = (data.users || []).filter(u => !allSelectedIds.includes(u.id));
+            } catch (e) {
+                console.error(e);
+            } finally {
+                this.searchLoading = false;
+            }
+        },
+
+        addMember(user, role) {
+            if (role === 'admins') this.selectedAdmins.push(user);
+            if (role === 'users') this.selectedUsers.push(user);
+            if (role === 'guests') this.selectedGuests.push(user);
+            
+            this.memberSearchQuery = '';
+            this.memberSearchResults = [];
+        },
+
+        removeMember(index, role) {
+            if (role === 'admins') {
+                if (this.selectedAdmins.length === 1) {
+                    alert("Group must have at least one admin.");
+                    return;
+                }
+                this.selectedAdmins.splice(index, 1);
+            }
+            if (role === 'users') this.selectedUsers.splice(index, 1);
+            if (role === 'guests') this.selectedGuests.splice(index, 1);
+        },
+
+        async createGroup() {
+            if (!this.newGroup.name) {
+                alert("Please enter a group name.");
+                return;
+            }
+
+            const payload = {
+                name: this.newGroup.name,
+                description: this.newGroup.description,
+                budget: parseFloat(this.newGroup.budget),
+                admins: this.selectedAdmins,
+                users: this.selectedUsers,
+                guests: this.selectedGuests,
+                items: []
+            };
+
+            try {
+                const response = await fetch('/group/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                
+                if (data.result) {
+                    this.showCreateGroupModal = false;
+                    this.fetchMyGroups();
+                    alert("Group created successfully!");
+                } else {
+                    alert("Error: " + data.msg);
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Failed to create group.");
+            }
+        }
 
     }
 });

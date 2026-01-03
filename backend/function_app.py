@@ -1144,6 +1144,41 @@ def update_user(req: func.HttpRequest) -> func.HttpResponse:
             mimetype="application/json"
         )
 
+@app.route(route="user/search", methods=[func.HttpMethod.GET], auth_level=func.AuthLevel.FUNCTION)
+def search_users(req: func.HttpRequest) -> func.HttpResponse:
+    try:
+        query = req.params.get("q")
+        if not query or len(query) < 2:
+            return func.HttpResponse(
+                json.dumps({"result": True, "users": []}),
+                status_code=200, 
+                mimetype="application/json"
+            )
+
+        sql_query = """
+            SELECT c.id, c.username, c.email, c.pfpUrl 
+            FROM c 
+            WHERE STARTSWITH(c.username, @q, true) 
+               OR STARTSWITH(c.email, @q, true)
+        """
+        
+        items = list(UserContainerProxy.query_items(
+            query=sql_query,
+            parameters=[{"name": "@q", "value": query}],
+            enable_cross_partition_query=True
+        ))
+        
+        return func.HttpResponse(
+            json.dumps({"result": True, "users": items[:10]}), 
+            status_code=200, 
+            mimetype="application/json"
+        )
+    except Exception as e:
+        return func.HttpResponse(
+            json.dumps({"result": False, "msg": str(e)}),
+            status_code=400,
+            mimetype="application/json"
+        )
     
 @app.route(route="group/items/suggest", methods=[func.HttpMethod.POST], auth_level=func.AuthLevel.FUNCTION)
 def group_items_ai_suggestion(req: func.HttpRequest) -> func.HttpResponse:
