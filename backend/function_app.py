@@ -932,59 +932,105 @@ def send_friend_request(req: func.HttpRequest) -> func.HttpResponse:
 def respond_friend_request(req : func.HttpRequest) -> func.HttpResponse:
     try:
         data = req.get_json()
-        req_to_user_id, req_to_user_username = data["to_id"], data["to_username"]
-        req_from_user_username, request_response = data["from_username"], data["accepted"]
 
-        if not isinstance(req_to_user_username, str) or not req_to_user_username.strip():
-            no_username_response = func.HttpResponse(json.dumps({"result": False, "msg" : "No username for the user request sent to"}), status_code= 400, mimetype="application/json")
-            return no_username_response
-        if not isinstance(req_from_user_username, str) or not req_from_user_username.strip():
-            no_username_from_response = func.HttpResponse(json.dumps({"result": False, "msg": "No username for the request from User found"}), status_code=400, mimetype="application/json")
-            return no_username_from_response
-        if not isinstance(request_response, bool):
-            non_boolean_req_response = func.HttpResponse(json.dumps({"result": False, "msg": "Not a Boolean response when responding to friend req"}),status_code=400, mimetype="application/json")
-            return non_boolean_req_response
-        if req_from_user_username == req_to_user_username:
-            req_to_self_response = func.HttpResponse(json.dumps({"result" : False, "msg": "Cannot have a freind request to self"}), status_code=200, mimetype="application/json")
-            return req_to_self_response
-        try:
-            user_receiver = UserContainerProxy.read_item(item=req_to_user_id, partition_key=req_to_user_username)
-        except CosmosResourceNotFoundError:
-            return func.HttpResponse(
-                json.dumps({"result": False, "msg": "No user reciver" }), status_code=404, mimetype="application/json")
-        SQL = """SELECT TOP 1 * FROM c WHERE c.username = @username"""
-        parameters = [{"name": "@username", "value": req_from_user_username}]
+        current_user_id = data.get("userId") 
+        originator_username = data.get("friendUsername")
+        response_accepted = data.get("accepted")
+
+        if not current_user_id or not originator_username or response_accepted is None:
+             return func.HttpResponse(json.dumps({"result": False, "msg": "Missing parameters"}), status_code=400, mimetype="application/json")
+
         items = list(UserContainerProxy.query_items(
-            query= SQL, parameters=parameters, enable_cross_partition_query=True
+            query="SELECT * FROM c WHERE c.id = @id",
+            parameters=[{"name": "@id", "value": current_user_id}],
+            enable_cross_partition_query=True
         ))
-        user_sender = items[0] if items else None # first item basically aka first query/read
-        if user_sender is None:
-            return func.HttpResponse(
-                json.dumps({"result":  False, "msg": "No sender to found who sent a req"}), status_code=404, mimetype="application/json" # Could happen if someone deletes account
-            )
-        for user in (user_receiver, user_sender):
-            user.setdefault("friends", [])
-            user.setdefault("incoming_requests", [])
-            user.setdefault("outgoing_requests", [])
-        if (req_from_user_username not in user_receiver["incoming_requests"]) or (req_to_user_username not in user_sender["outgoing_requests"]):
-            return func.HttpResponse(
-                json.dumps({"result" : False, "msg": "Friend request not found"}), status_code=404, mimetype="application/json"
-            )
-        user_sender["outgoing_requests"] = [x for x in user_sender["outgoing_requests"] if x != req_to_user_username]
-        user_receiver["incoming_requests"] = [x for x in user_receiver["incoming_requests"] if x != req_from_user_username]
-        if request_response:
-            if req_from_user_username not in user_receiver["friends"]:
-                user_receiver["friends"].append(req_from_user_username)
-            if req_to_user_username not in user_sender["friends"]:
-                user_sender["friends"].append(req_to_user_username)
-        UserContainerProxy.replace_item(user_receiver["id"], user_receiver, user_receiver["username"])
-        UserContainerProxy.replace_item(user_sender["id"], user_sender, user_sender["username"])
+        
+        if not items:
+             return func.HttpResponse(json.dumps({"result": False, "msg": "Current user not found"}), status_code=404, mimetype="application/json")
+        
+        user_receiver = items[0]
+        receiver_username = user_receiver["username"]
+
+        items = list(UserContainerProxy.query_items(
+            query="SELECT * FROM c WHERE c.username = @username",
+            parameters=[{"name": "@username", "value": originator_username}],
+            partition_key=originator_username
+        ))
+        
+        if not items:
+             return func.HttpResponse(json.dumps({"result": False, "msg": "Friend user not found"}), status_code=404, mimetype="application/json")
+        
+        user_sender = items[0]
+
+        if originator_username not in user_receiver.get("incoming_requests", []):
+             return func.HttpResponse(json.dumps({"result": False, "msg": "No incoming request from this user"}), status_code=400, mimetype="application/json")
+
+        user_receiver["incoming_requests"] = [u for u in user_receiver.get("incoming_requests", []) if u != originator_username]
+        user_sender["outgoing_requests"] = [u for u in user_sender.get("outgoing_requests", []) if u != receiver_username]
+
+        if response_accepted:
+            user_receiver.setdefault("friends", [])
+            user_sender.setdefault("friends", [])
+            
+            if originator_username not in user_receiver["friends"]:
+                user_receiver["friends"].append(originator_username)
+            
+            if receiver_username not in user_sender["friends"]:
+                user_sender["friends"].append(receiver_username)
+
+        UserContainerProxy.replace_item(item=user_receiver["id"], body=user_receiver)
+        UserContainerProxy.replace_item(item=user_sender["id"], body=user_sender)
+
         return func.HttpResponse(
-            json.dumps({"result" : True,  "msg":  "Accepted" if request_response else "Rejected"}), status_code= 200, mimetype="application/json"
+            json.dumps({"result" : True,  "msg":  "Accepted" if response_accepted else "Rejected"}), status_code= 200, mimetype="application/json"
         )
     except Exception as err:
         return func.HttpResponse(json.dumps({"result" : False, "msg" : str(err)}), status_code=400, mimetype="application/json")
 
+@app.route(route="user/friend/remove", methods=[func.HttpMethod.POST], auth_level=func.AuthLevel.FUNCTION)    
+def remove_friend(req: func.HttpRequest) -> func.HttpResponse:
+    try:
+        data = req.get_json()
+        current_user_id = data.get("userId")
+        friend_username = data.get("friendUsername")
+
+        if not current_user_id or not friend_username:
+            return func.HttpResponse(json.dumps({"result": False, "msg": "Missing parameters"}), status_code=400, mimetype="application/json")
+
+        # Get the current user
+        items = list(UserContainerProxy.query_items(
+            query="SELECT * FROM c WHERE c.id = @id",
+            parameters=[{"name": "@id", "value": current_user_id}],
+            enable_cross_partition_query=True
+        ))
+        if not items: return func.HttpResponse(json.dumps({"result": False, "msg": "User not found"}), status_code=404)
+        user_current = items[0]
+        current_username = user_current["username"]
+
+        # Get the friend
+        items = list(UserContainerProxy.query_items(
+            query="SELECT * FROM c WHERE c.username = @username",
+            parameters=[{"name": "@username", "value": friend_username}],
+            partition_key=friend_username
+        ))
+        if not items: return func.HttpResponse(json.dumps({"result": False, "msg": "Friend not found"}), status_code=404)
+        user_friend = items[0]
+
+        # Remove from friends lists
+        if "friends" in user_current:
+            user_current["friends"] = [f for f in user_current["friends"] if f != friend_username]
+        
+        if "friends" in user_friend:
+            user_friend["friends"] = [f for f in user_friend["friends"] if f != current_username]
+
+        UserContainerProxy.replace_item(item=user_current["id"], body=user_current)
+        UserContainerProxy.replace_item(item=user_friend["id"], body=user_friend)
+
+        return func.HttpResponse(json.dumps({"result": True, "msg": "Friend removed"}), status_code=200, mimetype="application/json")
+
+    except Exception as e:
+        return func.HttpResponse(json.dumps({"result": False, "msg": str(e)}), status_code=400, mimetype="application/json")
 
 @app.route(route="user/update", methods=[func.HttpMethod.POST], auth_level=func.AuthLevel.FUNCTION)
 def update_user(req: func.HttpRequest) -> func.HttpResponse:

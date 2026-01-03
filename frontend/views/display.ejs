@@ -148,16 +148,33 @@
                     </div>
                 </main>
                 <aside class="sidebar-right" v-if="loggedIn" :class="{ 'open': rightSidebarOpen }">
+                    
+                    <div class="card" v-if="incomingRequests.length > 0" style="margin-bottom: 20px;">
+                        <h3>Requests</h3>
+                        <ul style="list-style: none; padding: 0;">
+                            <li v-for="reqUser in incomingRequests" :key="reqUser" style="margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">
+                                <div style="font-weight: bold;">{{ reqUser }}</div>
+                                <div style="display: flex; gap: 5px; margin-top: 5px;">
+                                    <button class="btn btn-success btn-sm" @click="respondRequest(reqUser, true)">Accept</button>
+                                    <button class="btn btn-danger btn-sm" @click="respondRequest(reqUser, false)">Ignore</button>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
                     <div class="card">
                         <h3>Announcements</h3>
                         <p>Happy Christmas</p>
                     </div>
+                    
                     <div class="card">
-                        <h3>Online Friends</h3>
-                        <ul>
-                            <li>Alice</li>
-                            <li>Bob</li>
+                        <h3>My Friends</h3>
+                        <ul v-if="friends.length > 0">
+                            <li v-for="friend in friends" :key="friend">
+                                {{ friend }} 
+                            </li>
                         </ul>
+                        <p v-else class="text-muted">No friends yet.</p>
                     </div>
                 </aside>
 

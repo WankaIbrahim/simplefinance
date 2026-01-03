@@ -152,6 +152,47 @@ const azureModel = {
             console.error("Azure updateUser Error:", error.message);
             return { result: false, msg: "Failed to update user" };
         }
+    },
+    // friend logic
+    sendFriendRequest: async (fromId, fromUsername, toUsername) => {
+        try {
+            const response = await axios.post(`${BASE_URL}/user/friend/request`, {
+                id_from_username_request: fromId,
+                from_username_request: fromUsername,
+                to_username_request: toUsername
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Azure sendFriendRequest Error:", error.message);
+            return { result: false, msg: "Failed to send request" };
+        }
+    },
+
+    respondFriendRequest: async (userId, friendUsername, accepted) => {
+        try {
+            const response = await axios.post(`${BASE_URL}/user/friend/response`, {
+                userId: userId,
+                friendUsername: friendUsername,
+                accepted: accepted
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Azure respondFriendRequest Error:", error.message);
+            return { result: false, msg: "Failed to respond" };
+        }
+    },
+
+    removeFriend: async (userId, friendUsername) => {
+        try {
+            const response = await axios.post(`${BASE_URL}/user/friend/remove`, {
+                userId: userId,
+                friendUsername: friendUsername
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Azure removeFriend Error:", error.message);
+            return { result: false, msg: "Failed to remove friend" };
+        }
     }
 };
 

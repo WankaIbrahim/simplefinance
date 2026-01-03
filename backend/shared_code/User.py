@@ -11,7 +11,9 @@ class User:
             id:str | None = None,
             friends : list[str] | None = None,
             incoming_requests : list[str] | None= None, #storing user ids
-            outgoing_requests : list[str] | None = None # ^^
+            outgoing_requests : list[str] | None = None, # ^^
+            bio : str | None = None,     
+            email : str | None = None
         ):
         
         self.id = id or str(uuid.uuid4())
@@ -20,6 +22,8 @@ class User:
         self.friends = friends or []
         self.incoming_requests = incoming_requests or []
         self.outgoing_requests = outgoing_requests or []
+        self.bio = bio
+        self.email = email
         
     def to_json(self):
         return json.dumps(self.to_dict())
@@ -31,7 +35,9 @@ class User:
             "password" : self.password,
             "friends" : self.friends,
             "incoming_requests" : self.incoming_requests,
-            "outgoing_requests" : self.outgoing_requests
+            "outgoing_requests" : self.outgoing_requests,
+            "bio": self.bio,
+            "email": self.email
         }
     
     @classmethod
@@ -45,7 +51,9 @@ class User:
             friends =  data.get("friends", []),
             incoming_requests = data.get("incoming_requests", []),
             outgoing_requests = data.get("outgoing_requests", []),
-            id=data.get("id")
+            id=data.get("id"),
+            bio=data.get("bio"),
+            email=data.get("email")
         )
     
 def hash_password(password: str | str = "") -> str:

@@ -58,7 +58,12 @@ var app = new Vue({
         rightSidebarOpen: false,
         touchStartX: 0,
         touchEndX: 0,
-        windowWidth: window.innerWidth
+        windowWidth: window.innerWidth,
+
+        // friend logic
+        friends: [],
+        incomingRequests: [],
+        outgoingRequests: [],
     },
     mounted() {
         if (localStorage.getItem('loggedIn') === 'true') {
@@ -70,6 +75,7 @@ var app = new Vue({
                 this.fetchMembershipGroups();
             }
         }
+        this.fetchMyData();
 
         const urlParams = new URLSearchParams(window.location.search);
 
@@ -147,6 +153,19 @@ var app = new Vue({
         // currentPath() {
         // return window.location.pathname;
         // }
+        onlineFriends() {
+            return this.friends;
+        },
+        
+        isFriend() {
+            return this.friends && this.friends.includes(this.searchUsername);
+        },
+        hasSentRequest() {
+            return this.outgoingRequests && this.outgoingRequests.includes(this.searchUsername);
+        },
+        hasReceivedRequest() {
+            return this.incomingRequests && this.incomingRequests.includes(this.searchUsername);
+        }
     },
     methods: {
 
@@ -624,7 +643,116 @@ var app = new Vue({
                 this.statusMessage = "Update failed";
                 this.statusColor = "red";
             }
-        }
+        },
+        // friend logic
+        async fetchUserProfile(id) {
+            try {
+                const response = await fetch('/get-user-details', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: id })
+                });
+                const data = await response.json();
+
+                if (data.result && data.user) {
+                    this.searchUsername = data.user.username;
+                    this.searchUserId = data.user.id;
+                    this.searchUserPfp = data.user.pfpUrl || '';
+                    this.inputEmail = data.user.email || '';
+                    this.searchUserBio = data.user.bio || '';
+                    this.bioDraft = this.searchUserBio; 
+
+                    if (this.userId === id) {
+                        this.friends = data.user.friends || [];
+                        this.incomingRequests = data.user.incoming_requests || [];
+                        this.outgoingRequests = data.user.outgoing_requests || [];
+                    }
+                }
+            } catch (error) {
+                console.error("Error loading profile:", error);
+            }
+        },
+
+        async fetchMyData() {
+            if (!this.userId) return;
+            try {
+                const response = await fetch('/get-user-details', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: this.userId })
+                });
+                const data = await response.json();
+                if (data.result && data.user) {
+                    this.friends = data.user.friends || [];
+                    this.incomingRequests = data.user.incoming_requests || [];
+                    this.outgoingRequests = data.user.outgoing_requests || [];
+                }
+            } catch (e) { console.error("Error fetching my data:", e); }
+        },
+
+        async sendFriendRequest() {
+            if (!this.userId) return;
+            try {
+                const response = await fetch('/friend/request', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        fromId: this.userId,
+                        fromUsername: this.inputUsername,
+                        toUsername: this.searchUsername 
+                    })
+                });
+                const data = await response.json();
+                if (data.result) {
+                    this.outgoingRequests.push(this.searchUsername);
+                } else {
+                    alert(data.msg);
+                }
+            } catch (e) { console.error(e); }
+        },
+
+        async respondRequest(friendUsername, accepted) {
+            try {
+                const response = await fetch('/friend/respond', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        userId: this.userId,
+                        friendUsername: friendUsername,
+                        accepted: accepted 
+                    })
+                });
+                const data = await response.json();
+                if (data.result) {
+                    this.incomingRequests = this.incomingRequests.filter(u => u !== friendUsername);
+                    if (accepted) {
+                        this.friends.push(friendUsername);
+                    }
+                    if (this.searchUsername === friendUsername) {
+                        this.fetchUserProfile(this.searchUserId); 
+                    }
+                }
+            } catch (e) { console.error(e); }
+        },
+
+        async removeFriend() {
+            if (!confirm(`Are you sure you want to remove ${this.searchUsername}?`)) return;
+            try {
+                const response = await fetch('/friend/remove', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        userId: this.userId,
+                        friendUsername: this.searchUsername 
+                    })
+                });
+                const data = await response.json();
+                if (data.result) {
+                    this.friends = this.friends.filter(u => u !== this.searchUsername);
+                    alert("Friend removed.");
+                }
+            } catch (e) { console.error(e); }
+        },
 
     }
 });

@@ -148,6 +148,25 @@ app.post('/vote-item', async (req, res) => {
     res.json(result);
 });
 
+// friend logic
+app.post('/friend/request', async (req, res) => {
+  const { fromId, fromUsername, toUsername } = req.body;
+  const result = await azureModel.sendFriendRequest(fromId, fromUsername, toUsername);
+  res.json(result);
+});
+
+app.post('/friend/respond', async (req, res) => {
+  const { userId, friendUsername, accepted } = req.body;
+  const result = await azureModel.respondFriendRequest(userId, friendUsername, accepted);
+  res.json(result);
+});
+
+app.post('/friend/remove', async (req, res) => {
+  const { userId, friendUsername } = req.body;
+  const result = await azureModel.removeFriend(userId, friendUsername);
+  res.json(result);
+});
+
 app.post('/upload-pfp', uploadPfp.single('pfp'), async (req, res) => {
   try {
     if (!req.file) {

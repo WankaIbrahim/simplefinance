@@ -43,5 +43,11 @@ func start
 
 To run the front-end server:
 ```
-npm start
+npm install
+```
+
+and then
+
+```
+npm run
 ```

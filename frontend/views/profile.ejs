@@ -43,21 +43,21 @@
                     <div class="stats-row">
                         <div class="stat-item">
                             <span class="stat-value">3</span>
-                            <span class="stat-label">Friends</span>
+                            <span class="stat-label" style="color: black">Friends</span>
                         </div>
                         <div class="stat-item">
                             <span class="stat-value">5</span>
-                            <span class="stat-label">Groups</span>
+                            <span class="stat-label" style="color: black">Groups</span>
                         </div>
                         <div class="stat-item">
                             <span class="stat-value text-success">Online</span>
-                            <span class="stat-label">Status</span>
+                            <span class="stat-label" style="color: black">Status</span>
                         </div>
                     </div>
                     <div class="card" style="margin-top: 16px;">
                         <h3>Bio</h3>
 
-                        <p v-if="searchUserId != userId" class="text-muted" style="margin: 0;">
+                        <p v-if="searchUserId != userId" class="text-muted" style="margin: 0; white-space: pre-wrap; color: black">
                             {{ searchUserBio || "No bio yet." }}
                         </p>
 
@@ -81,8 +81,8 @@
 
                     <div class="profile-actions">
                         <div v-if="searchUserId == userId" class="action-group">
-                            <button class="btn btn-primary" onclick="window.location.href='/settings'">Edit Profile</button>
-                            <div style="margin-top:12px; display:flex; flex-direction:column; gap:8px; align-items:flex-start;">
+                             <button class="btn btn-primary" onclick="window.location.href='/settings'">Edit Profile</button>
+                             <div style="margin-top:12px; display:flex; flex-direction:column; gap:8px; align-items:flex-start;">
                                 <input type="file" accept="image/*" @change="onPfpSelected" />
                                 <button class="btn btn-outline-primary" @click="uploadPfp" :disabled="!pfpFile">
                                     Update user PFP
@@ -92,8 +92,23 @@
                         </div>
 
                         <div v-else class="action-group">
-                            <button class="btn btn-primary">Add Friend</button>
-                            <button class="btn btn-outline-primary">Message</button>
+                            
+                            <template v-if="isFriend">
+                                <button class="btn btn-success" disabled>Friends</button>
+                                <button class="btn btn-danger" @click="removeFriend">Unfriend</button>
+                            </template>
+
+                            <template v-else-if="hasSentRequest">
+                                <button class="btn btn-secondary" disabled>Request Sent</button>
+                            </template>
+
+                            <template v-else-if="hasReceivedRequest">
+                                <button class="btn btn-success" @click="respondRequest(searchUsername, true)">Accept Request</button>
+                            </template>
+
+                            <template v-else>
+                                <button class="btn btn-primary" @click="sendFriendRequest">Add Friend</button>
+                            </template>
                             
                             <div class="danger-actions">
                                 <button class="btn btn-danger btn-sm">Report</button>
