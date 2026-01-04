@@ -44,9 +44,71 @@
                     <div v-if="isCurrentUserAdmin" class="admin-toolbar card">
                         <h3>Admin Controls</h3>
                         <div class="toolbar-actions">
-                            <button class="btn btn-outline-primary">Add Members</button>
-                            <button class="btn btn-outline-primary">Settings</button>
-                            <button class="btn btn-danger">Delete group</button>
+                            <button class="btn btn-outline-primary" @click="showExpenseModal = true">Add
+                                Expense</button> <button class="btn btn-outline-primary"
+                                @click="openGroupSettings">Group Settings</button>
+
+                            <button class="btn btn-danger" @click="deleteGroup">Delete Group</button>
+                        </div>
+                    </div>
+
+                    <div v-else class="card" style="margin-bottom: 20px;">
+                        <button class="btn btn-danger" @click="leaveGroup">Leave Group</button>
+                    </div>
+
+
+                    <div class="modal-overlay" v-if="showGroupSettingsModal"
+                        @mousedown.self="showGroupSettingsModal = false">
+                        <div class="modal-card" style="max-width: 700px;">
+                            <div class="modal-header">
+                                <h2>Group Settings</h2>
+                                <button class="close-btn" @click="showGroupSettingsModal = false">&times;</button>
+                            </div>
+
+                            <div class="modal-body">
+                                <h3>General</h3>
+                                <div class="form-group">
+                                    <label>Group Name</label>
+                                    <input type="text" v-model="editGroupData.name">
+                                </div>
+                                <div class="form-group">
+                                    <label>Description</label>
+                                    <textarea v-model="editGroupData.description" rows="2"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>Total Budget</label>
+                                    <input type="number" v-model="editGroupData.budget">
+                                </div>
+
+                                <hr>
+
+                                <h3>Manage Members</h3>
+                                <div class="member-list-settings">
+                                    <div v-for="member in [...(activeGroup.admins||[]), ...(activeGroup.users||[]), ...(activeGroup.guests||[])]"
+                                        class="member-row-settings">
+
+                                        <span class="member-name">{{ member.username }}</span>
+
+                                        <div class="member-actions">
+                                            <select @change="changeMemberRole(member, $event.target.value)">
+                                                <option value="" disabled selected>Change Role</option>
+                                                <option value="admins">Make Admin</option>
+                                                <option value="users">Make Member</option>
+                                                <option value="guests">Make Guest</option>
+                                            </select>
+
+                                            <button class="btn-xs btn-danger"
+                                                @click="removeMember(member)">Remove</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button class="btn btn-secondary"
+                                    @click="showGroupSettingsModal = false">Cancel</button>
+                                <button class="btn btn-success" @click="saveGroupSettings">Save Changes</button>
+                            </div>
                         </div>
                     </div>
 
@@ -80,8 +142,16 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="expense in activeGroup.items" :key="expense.id">
-                                    <td>{{ expense.name }}</td>
+                                <tr v-for="expense in activeGroup.items" :key="expense.id" :class="{ 'purchased-row': expense.purchased }">
+                                    <td>
+                                        <div style="display:flex; align-items:center; gap:10px;">
+                                             <input type="checkbox" 
+                                                    :checked="expense.purchased" 
+                                                    @change="togglePurchased(expense)"
+                                                    style="width:18px; height:18px; cursor:pointer;">
+                                             <span>{{ expense.name }}</span>
+                                        </div>
+                                    </td>
                                     <td class="price">£{{ expense.price }}</td>
                                     <td>
                                         <span v-if="expense.buyer" class="badge">{{ expense.buyer.username ||

@@ -193,6 +193,30 @@ app.post('/group/create', async (req, res) => {
   res.json(result);
 });
 
+app.post('/group/update-settings', async (req, res) => {
+  const { groupId, name, description, budget } = req.body;
+  const result = await azureModel.updateGroupSettings(groupId, name, description, budget);
+  res.json(result);
+});
+
+app.post('/group/member/role', async (req, res) => {
+  const { groupId, userId, username, role } = req.body;
+  const result = await azureModel.changeMemberRole(groupId, userId, username, role);
+  res.json(result);
+});
+
+app.post('/group/member/remove', async (req, res) => {
+  const { groupId, userId, username } = req.body;
+  const result = await azureModel.removeMemberFromGroup(groupId, userId, username);
+  res.json(result);
+});
+
+app.post('/group/delete', async (req, res) => {
+  const { groupId } = req.body;
+  const result = await azureModel.deleteGroup(groupId);
+  res.json(result);
+});
+
 
 async function callAzureAPI(endpoint, method, body = null) {
   const url = `${BACKEND_ENDPOINT}${endpoint}`;

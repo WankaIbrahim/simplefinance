@@ -74,7 +74,7 @@ var app = new Vue({
             budget: 0
         },
         
-        
+        // find users to add to a group
         memberSearchQuery: '',
         memberSearchResults: [],
         searchLoading: false,
@@ -83,7 +83,14 @@ var app = new Vue({
         // Lists of selected people
         selectedAdmins: [],
         selectedUsers: [],
-        selectedGuests: []
+        selectedGuests: [],
+
+        showGroupSettingsModal: false,
+        editGroupData: {
+        name: '',
+        description: '',
+        budget: 0
+    },
     },
     mounted() {
         if (localStorage.getItem('loggedIn') === 'true') {
@@ -864,6 +871,137 @@ var app = new Vue({
                 console.error(e);
                 alert("Failed to create group.");
             }
+        },
+        openGroupSettings() {
+            if (!this.activeGroup) return;
+            this.editGroupData = {
+                name: this.activeGroup.name,
+                description: this.activeGroup.description || '',
+                budget: this.activeGroup.budget
+            };
+            this.showGroupSettingsModal = true;
+        },
+    
+        async saveGroupSettings() {
+            try {
+                const response = await fetch('/group/update-settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        groupId: this.activeGroup.groupId,
+                        ...this.editGroupData
+                    })
+                });
+                const data = await response.json();
+                if (data.result) {
+                    alert("Settings updated!");
+                    this.showGroupSettingsModal = false;
+                    this.fetchGroupDetails(this.activeGroup.groupId);
+                } else {
+                    alert("Update failed: " + data.msg);
+                }
+            } catch (e) { console.error(e); }
+        },
+    
+        async changeMemberRole(member, newRole) {
+            if (!confirm(`Change ${member.username}'s role to ${newRole}?`)) return;
+            try {
+                const response = await fetch('/group/member/role', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        groupId: this.activeGroup.groupId,
+                        userId: member.id,
+                        username: member.username,
+                        role: newRole
+                    })
+                });
+                const data = await response.json();
+                if (data.result) {
+                    this.fetchGroupDetails(this.activeGroup.groupId);
+                } else {
+                    alert(data.msg);
+                }
+            } catch (e) { console.error(e); }
+        },
+    
+        async removeMember(member) {
+            if (!confirm(`Remove ${member.username} from group?`)) return;
+            try {
+                const response = await fetch('/group/member/remove', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        groupId: this.activeGroup.groupId,
+                        userId: member.id,
+                        username: member.username
+                    })
+                });
+                const data = await response.json();
+                if (data.result) {
+                    this.fetchGroupDetails(this.activeGroup.groupId);
+                } else {
+                    alert(data.msg);
+                }
+            } catch (e) { console.error(e); }
+        },
+    
+        async leaveGroup() {
+            if (!confirm("Are you sure you want to leave this group?")) return;
+            try {
+                const response = await fetch('/group/member/remove', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        groupId: this.activeGroup.groupId,
+                        userId: this.userId,
+                        username: this.inputUsername
+                    })
+                });
+                const data = await response.json();
+                if (data.result) {
+                    window.location.href = '/display';
+                } else {
+                    alert(data.msg);
+                }
+            } catch (e) { console.error(e); }
+        },
+    
+        async deleteGroup() {
+            if (!confirm("WARNING: This will permanently delete the group and all expenses. Continue?")) return;
+            try {
+                const response = await fetch('/group/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ groupId: this.activeGroup.groupId })
+                });
+                const data = await response.json();
+                if (data.result) {
+                    alert("Group deleted.");
+                    window.location.href = '/display';
+                } else {
+                    alert(data.msg);
+                }
+            } catch (e) { console.error(e); }
+        },
+    
+        async togglePurchased(item) {
+            const newStatus = !item.purchased;
+            try {
+                const response = await fetch('/update-item', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        groupId: this.activeGroup.groupId,
+                        itemId: item.id,
+                        updates: { purchased: newStatus }
+                    })
+                });
+                const data = await response.json();
+                if (data.result) {
+                    item.purchased = newStatus; 
+                }
+            } catch (e) { console.error(e); }
         }
 
     }

@@ -166,6 +166,41 @@
 .btn-icon.upvote { color: #4CAF50; }
 .btn-icon.downvote { color: #F44336; }
 
+.purchased-row {
+    background-color: #f2f2f2;
+    color: #888;
+}
+
+.purchased-row td {
+    text-decoration: line-through;
+}
+
+.purchased-row input[type="checkbox"], 
+.purchased-row button {
+    text-decoration: none;
+    opacity: 1;
+}
+
+.member-list-settings {
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.member-row-settings {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f9f9f9;
+}
+
+.member-actions {
+    display: flex;
+    gap: 10px;
+}
 
 @media (max-width: 900px) {
     

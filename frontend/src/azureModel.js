@@ -216,6 +216,62 @@ const azureModel = {
             return { result: false, msg: "Failed to create group" };
         }
     },
+
+
+
+
+    updateGroupSettings: async (groupId, name, description, budget) => {
+        try {
+            const requests = [
+                axios.post(`${BASE_URL}/group/name/set`, { groupId, name }),
+                axios.post(`${BASE_URL}/group/description/set`, { groupId, description }),
+                axios.post(`${BASE_URL}/group/budget/set`, { groupId, budget: parseFloat(budget) }) 
+            ];
+            
+            await Promise.all(requests);
+            return { result: true };
+        } catch (error) {
+            console.error("Azure updateGroupSettings Error:", error.message);
+            return { result: false, msg: "Failed to update settings" };
+        }
+    },
+
+    changeMemberRole: async (groupId, userId, username, role) => {
+        try {
+            const response = await axios.post(`${BASE_URL}/group/user/role/change`, {
+                groupId,
+                user: { id: userId, username },
+                role
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Azure changeMemberRole Error:", error.message);
+            return { result: false, msg: "Failed to change role" };
+        }
+    },
+
+    removeMemberFromGroup: async (groupId, userId, username) => {
+        try {
+            const response = await axios.post(`${BASE_URL}/group/user/remove`, {
+                groupId,
+                user: { id: userId, username }
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Azure removeMemberFromGroup Error:", error.message);
+            return { result: false, msg: "Failed to remove member" };
+        }
+    },
+
+    deleteGroup: async (groupId) => {
+        try {
+            const response = await axios.post(`${BASE_URL}/group/delete`, { groupId });
+            return response.data;
+        } catch (error) {
+            console.error("Azure deleteGroup Error:", error.message);
+            return { result: false, msg: "Failed to delete group" };
+        }
+    },
 };
 
 module.exports = azureModel;

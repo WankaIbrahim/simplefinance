@@ -432,17 +432,14 @@ def update_budget(req: func.HttpRequest) -> func.HttpResponse:
                 mimetype="application/json"
             )
 
-        current = int(group.get("budget", 0))
-        new_value = current + change
-
-        if new_value < 0:
+        if change < 0:
             return func.HttpResponse(
                 json.dumps({"result": False, "msg": "Budget cannot go below 0"}),
                 status_code=400,
                 mimetype="application/json"
             )
 
-        group["budget"] = new_value
+        group["budget"] = change
         GroupContainerProxy.replace_item(item=groupId, body=group)
         
         return func.HttpResponse(
@@ -1180,6 +1177,28 @@ def search_users(req: func.HttpRequest) -> func.HttpResponse:
             mimetype="application/json"
         )
     
+@app.route(route="group/description/set", methods=[func.HttpMethod.POST], auth_level=func.AuthLevel.FUNCTION)    
+def update_description(req: func.HttpRequest) -> func.HttpResponse:
+    try:
+        data = req.get_json()
+        logging.info(f"Request to update group description: {data}")
+        
+        groupId = data["groupId"]
+        description = data["description"]
+        
+        try:
+            group = GroupContainerProxy.read_item(item=groupId, partition_key=groupId)    
+        except CosmosResourceNotFoundError:
+            return func.HttpResponse(json.dumps({"result": False, "msg": "Group not found"}), status_code=404)
+
+        group["description"] = description
+        GroupContainerProxy.replace_item(item=groupId, body=group)
+        
+        return func.HttpResponse(json.dumps({"result": True, "msg": "OK"}), status_code=200, mimetype="application/json")
+    except Exception as e:
+        return func.HttpResponse(json.dumps({"result": False, "msg": str(e)}), status_code=400, mimetype="application/json")
+    
+
 @app.route(route="group/items/suggest", methods=[func.HttpMethod.POST], auth_level=func.AuthLevel.FUNCTION)
 def group_items_ai_suggestion(req: func.HttpRequest) -> func.HttpResponse:
     try: 
