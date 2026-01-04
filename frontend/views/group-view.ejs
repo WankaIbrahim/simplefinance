@@ -47,7 +47,7 @@
                             <button class="btn btn-outline-primary" @click="showExpenseModal = true">Add
                                 Expense</button> <button class="btn btn-outline-primary"
                                 @click="openGroupSettings">Group Settings</button>
-
+                                <button class="btn btn-outline-primary" @click="openInviteModal">Invite Member</button>
                             <button class="btn btn-danger" @click="deleteGroup">Delete Group</button>
                         </div>
                     </div>
@@ -228,6 +228,36 @@
             <div v-else class="app-layout" style="justify-content: center;">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif" alt="Loading"
                     style="width: 50px;">
+            </div>
+            <!-- Invite Member Modal -->
+            <div class="modal-overlay" v-if="showInviteModal" @click.self="closeInviteModal">
+            <div class="modal-card" style="max-width: 520px;">
+                <div class="modal-header">
+                <h2>Invite Member</h2>
+                <button class="close-btn" @click="closeInviteModal">&times;</button>
+                </div>
+
+                <div class="modal-body">
+                <div class="form-group">
+                    <label>Username or Email</label>
+                    <input type="text"
+                        v-model.trim="inviteIdentifier"
+                        placeholder="e.g. husam3 or husam@email.com"
+                        @keyup.enter="sendInvite" />
+                </div>
+
+                <p v-if="inviteStatusMessage" class="small fw-bold" :style="{ color: inviteStatusColor }">
+                    {{ inviteStatusMessage }}
+                </p>
+                </div>
+
+                <div class="modal-footer">
+                <button class="btn btn-secondary" @click="closeInviteModal">Cancel</button>
+                <button class="btn btn-success" :disabled="inviteSending || !inviteIdentifier" @click="sendInvite">
+                    {{ inviteSending ? "Sending..." : "Send Invite" }}
+                </button>
+                </div>
+            </div>
             </div>
 
             <div class="modal-overlay" v-if="showExpenseModal" @click.self="showExpenseModal = false">

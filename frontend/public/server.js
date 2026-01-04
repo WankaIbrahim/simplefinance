@@ -73,6 +73,12 @@ var app = new Vue({
             description: '',
             budget: 0
         },
+        showInviteModal: false,
+        inviteIdentifier: '',
+        inviteSending: false,
+        inviteStatusMessage: '',
+        inviteStatusColor: 'red',
+
         
         // find users to add to a group
         memberSearchQuery: '',
@@ -459,6 +465,68 @@ var app = new Vue({
             this.pfpFile = file;
             this.pfpStatus = `Selected: ${file.name}`;
         },
+        openInviteModal() {
+        this.showInviteModal = true;
+        this.inviteIdentifier = '';
+        this.inviteStatusMessage = '';
+        this.inviteStatusColor = 'red';
+        },
+
+        closeInviteModal() {
+        this.showInviteModal = false;
+        },
+
+        async sendInvite() {
+        if (!this.inviteIdentifier || this.inviteSending) return;
+
+        if (!this.activeGroup || !this.activeGroup.groupId) {
+            this.inviteStatusMessage = "Group not loaded.";
+            this.inviteStatusColor = "red";
+            return;
+        }
+
+        if (!this.isCurrentUserAdmin) {
+            this.inviteStatusMessage = "Only admins can invite members.";
+            this.inviteStatusColor = "red";
+            return;
+        }
+
+        this.inviteSending = true;
+        this.inviteStatusMessage = '';
+        this.inviteStatusColor = 'red';
+
+        try {
+            const response = await fetch('/group/invite', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                groupId: this.activeGroup.groupId,
+                identifier: this.inviteIdentifier, 
+                inviterId: this.userId,
+                inviterUsername: this.inputUsername
+            })
+            });
+
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok || data.result === false) {
+            throw new Error(data.msg || "Invite failed");
+            }
+
+            this.inviteStatusMessage = data.msg || "Invite sent!";
+            this.inviteStatusColor = "green";
+
+            await this.fetchGroupDetails(this.activeGroup.groupId);
+
+            setTimeout(() => this.closeInviteModal(), 700);
+        } catch (err) {
+            this.inviteStatusMessage = err.message || "Something went wrong";
+            this.inviteStatusColor = "red";
+        } finally {
+            this.inviteSending = false;
+        }
+        },
+
 
         async uploadPfp() {
             if (!this.pfpFile) return;

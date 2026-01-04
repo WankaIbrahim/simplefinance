@@ -1176,6 +1176,94 @@ def search_users(req: func.HttpRequest) -> func.HttpResponse:
             status_code=400,
             mimetype="application/json"
         )
+@app.route(route="group/invite", methods=[func.HttpMethod.POST], auth_level=func.AuthLevel.FUNCTION)
+def invite_user_to_group(req: func.HttpRequest) -> func.HttpResponse:
+    try:
+        data = req.get_json()
+        logging.info(f"Invite user request: {data}")
+
+        groupId = data.get("groupId")
+        identifier = (data.get("identifier") or "").strip()
+        inviterId = data.get("inviterId")
+
+        if not groupId or not identifier or not inviterId:
+            return func.HttpResponse(
+                json.dumps({"result": False, "msg": "Missing parameters"}),
+                status_code=400,
+                mimetype="application/json"
+            )
+
+        try:
+            group = GroupContainerProxy.read_item(item=groupId, partition_key=groupId)
+        except CosmosResourceNotFoundError:
+            return func.HttpResponse(
+                json.dumps({"result": False, "msg": "Group does not exist"}),
+                status_code=404,
+                mimetype="application/json"
+            )
+
+        inviter_is_admin = any(
+            isinstance(a, dict) and a.get("id") == inviterId
+            for a in group.get("admins", [])
+        )
+
+        if not inviter_is_admin:
+            return func.HttpResponse(
+                json.dumps({"result": False, "msg": "Only admins can invite members"}),
+                status_code=403,
+                mimetype="application/json"
+            )
+
+
+        user_items = list(UserContainerProxy.query_items(
+            query="""
+                SELECT TOP 1 * FROM c
+                WHERE c.username = @identifier OR c.email = @identifier
+            """,
+            parameters=[{"name": "@identifier", "value": identifier}],
+            enable_cross_partition_query=True
+        ))
+
+        if not user_items:
+            return func.HttpResponse(
+                json.dumps({"result": False, "msg": "User not found"}),
+                status_code=404,
+                mimetype="application/json"
+            )
+
+        user = user_items[0]
+        userId = user["id"]
+        username = user["username"]
+
+        for role in ("admins", "users", "guests"):
+            if any(isinstance(u, dict) and u.get("id") == userId for u in group.get(role, [])):
+                return func.HttpResponse(
+                    json.dumps({"result": False, "msg": "User already in group"}),
+                    status_code=409,
+                    mimetype="application/json"
+                )
+        group.setdefault("users", [])
+        group["users"].append({
+            "id": userId,
+            "username": username
+        })
+
+        GroupContainerProxy.replace_item(item=groupId, body=group)
+
+        return func.HttpResponse(
+            json.dumps({"result": True, "msg": f"{username} added to group"}),
+            status_code=200,
+            mimetype="application/json"
+        )
+
+    except Exception as e:
+        logging.exception("Invite user failed")
+        return func.HttpResponse(
+            json.dumps({"result": False, "msg": str(e)}),
+            status_code=400,
+            mimetype="application/json"
+        )
+
     
 @app.route(route="group/description/set", methods=[func.HttpMethod.POST], auth_level=func.AuthLevel.FUNCTION)    
 def update_description(req: func.HttpRequest) -> func.HttpResponse:
