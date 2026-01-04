@@ -799,6 +799,10 @@ def update_item(req: func.HttpRequest) -> func.HttpResponse:
                     item["purchased"] = updates["purchased"]
                 if "voted" in updates:
                     item["voted"] = updates["voted"]
+                if  "priority" in updates:
+                    item["priority"] = updates["priority"]
+                if  "priorityRank" in updates:
+                    item["priorityRank"] = updates["priorityRank"]
                 break
         
         if not item_found:

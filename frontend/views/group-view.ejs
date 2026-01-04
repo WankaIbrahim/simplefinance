@@ -142,7 +142,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="expense in activeGroup.items" :key="expense.id" :class="{ 'purchased-row': expense.purchased }">
+                                <tr v-for="expense in sortedGroupItems" :key="expense.id" :class="{ 'purchased-row': expense.purchased }">
                                     <td>
                                         <div style="display:flex; align-items:center; gap:10px;">
                                              <input type="checkbox" 
@@ -169,6 +169,28 @@
                                         <button @click="downvote(expense)" class="btn-icon downvote" v-else>
                                             ▼
                                         </button>
+
+                                        <div style="margin-top: 10px;">
+                                            <label style="display:flex; align-items:center; gap:10px; margin:6px 0;">
+                                                <input
+                                                type="checkbox"
+                                                :checked="expense.priority"
+                                                @change="prioritiseExpense(expense)"
+                                                >
+
+                                                Prioritise items for purchasing
+                                            </label>
+
+                                            <label style="display:flex; align-items:center; gap:10px; margin:6px 0;">
+                                                <input type="radio" @click="confirmRemoveExpense(expense)">
+                                                Remove item from list
+                                            </label>
+
+                                            <label style="display:flex; align-items:center; gap:10px; margin:6px 0;">
+                                                <input type="radio" @change="openEditExpense(expense); $event.target.checked = false">
+                                                Update item details
+                                            </label>
+                                        </div>
                                     </td>
                                 </tr>
                                 <tr v-if="activeGroup.items.length === 0">
@@ -229,7 +251,6 @@
                 <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif" alt="Loading"
                     style="width: 50px;">
             </div>
-            <!-- Invite Member Modal -->
             <div class="modal-overlay" v-if="showInviteModal" @click.self="closeInviteModal">
             <div class="modal-card" style="max-width: 520px;">
                 <div class="modal-header">
@@ -258,6 +279,66 @@
                 </button>
                 </div>
             </div>
+            </div>
+
+            <div class="modal-overlay" v-if="showRemoveConfirm" @click.self="closeRemoveConfirm">
+                <div class="modal-card" style="max-width: 520px;">
+                    <div class="modal-header">
+                        <h2>Remove item?</h2>
+                        <button class="close-btn" @click="closeRemoveConfirm">&times;</button>
+                    </div>
+
+                    <div class="modal-body">
+                        <p>Remove <strong>{{ selectedExpense && selectedExpense.name }}</strong> from the list?</p>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" @click="closeRemoveConfirm">Cancel</button>
+                        <button class="btn btn-danger" @click="removeSelectedExpense">Remove</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-overlay" v-if="showEditExpenseModal" @click.self="closeEditExpense">
+                <div class="modal-card" style="max-width: 700px;">
+                    <div class="modal-header">
+                        <h2>Update item details</h2>
+                        <button class="close-btn" @click="closeEditExpense">&times;</button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>Description</label>
+                            <input type="text" v-model.trim="editExpenseData.name">
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Price (£)</label>
+                                <input type="number" v-model.number="editExpenseData.price" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label>Quantity</label>
+                                <input type="number" v-model.number="editExpenseData.quantity" step="1" min="1">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Buyer</label>
+                            <select v-model="editExpenseData.buyerUsername">
+                                <option value="">-</option>
+                                <option v-for="m in [...(activeGroup.admins||[]), ...(activeGroup.users||[])]" :value="m.username">
+                                    {{ m.username }}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" @click="closeEditExpense">Cancel</button>
+                        <button class="btn btn-success" @click="saveEditExpense">Save</button>
+                    </div>
+                </div>
             </div>
 
             <div class="modal-overlay" v-if="showExpenseModal" @click.self="showExpenseModal = false">

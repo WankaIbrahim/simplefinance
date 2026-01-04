@@ -85,6 +85,20 @@ var app = new Vue({
         memberSearchResults: [],
         searchLoading: false,
         activeSearchRole: 'users',
+
+        showRemoveConfirm: false,
+        showEditExpenseModal: false,
+        selectedExpense: null,
+
+        editExpenseData: {
+        id: null,
+        name: '',
+        price: 0,
+        quantity: 1,
+        buyerUsername: '',
+        url: ''
+        },
+
         
         // Lists of selected people
         selectedAdmins: [],
@@ -154,6 +168,23 @@ var app = new Vue({
                 return false;
             });
         },
+        sortedGroupItems() {
+        if (!this.activeGroup || !Array.isArray(this.activeGroup.items)) return [];
+        const items = [...this.activeGroup.items];
+
+        return items.sort((a, b) => {
+            const ap = a.priority ? 1 : 0;
+            const bp = b.priority ? 1 : 0;
+
+            if (bp !== ap) return bp - ap; 
+
+            const ar = a.priorityRank || 0;
+            const br = b.priorityRank || 0;
+            return ar - br;
+        });
+        },
+
+
 
         membershipGroups() {
             return this.groups.filter(group => {
@@ -767,6 +798,96 @@ var app = new Vue({
                 console.error("Error loading profile:", error);
             }
         },
+        toggleActionMenu(expense) {
+        (this.activeGroup?.items || []).forEach(i => i.showActions = false);
+        expense.showActions = !expense.showActions;
+        },
+
+        closeAllActionMenus() {
+        (this.activeGroup?.items || []).forEach(i => i.showActions = false);
+        },
+
+
+        async prioritiseExpense(expense) {
+        const newPriority = !expense.priority;
+
+        const updates = newPriority
+            ? { priority: true, priorityRank: Date.now() }
+            : { priority: false, priorityRank: null };
+
+        await this.updateExpense(expense.id, updates);
+        },
+
+        confirmRemoveExpense(expense) {
+        this.closeAllActionMenus();
+        this.selectedExpense = expense;
+        this.showRemoveConfirm = true;
+        },
+
+        closeRemoveConfirm() {
+        this.showRemoveConfirm = false;
+        this.selectedExpense = null;
+        },
+
+        async removeSelectedExpense() {
+        if (!this.selectedExpense) return;
+        const id = this.selectedExpense.id;
+
+        this.showRemoveConfirm = false;
+        this.selectedExpense = null;
+
+        await this.removeExpense(id);
+        },
+
+        openEditExpense(expense) {
+        this.closeAllActionMenus();
+        this.selectedExpense = expense;
+
+        this.editExpenseData = {
+            id: expense.id,
+            name: expense.name || '',
+            price: Number(expense.price || 0),
+            quantity: Number(expense.quantity || 1),
+            buyerUsername: (expense.buyer && expense.buyer.username) ? expense.buyer.username : (expense.buyer || ''),
+            url: expense.url || ''
+        };
+
+        this.showEditExpenseModal = true;
+        },
+
+        closeEditExpense() {
+        this.showEditExpenseModal = false;
+        this.selectedExpense = null;
+        },
+
+        async saveEditExpense() {
+        const e = this.editExpenseData;
+        if (!e.id) return;
+
+        if (!e.name || e.name.trim().length === 0) {
+            alert("Description is required.");
+            return;
+        }
+
+        const updates = {
+            name: e.name.trim(),
+            price: Number(e.price || 0),
+            quantity: Number(e.quantity || 1),
+            url: e.url ? e.url.trim() : null
+        };
+
+        if (e.buyerUsername && e.buyerUsername.trim()) {
+            const allMembers = [...(this.activeGroup.admins || []), ...(this.activeGroup.users || [])];
+            const buyerObj = allMembers.find(m => m.username === e.buyerUsername);
+            updates.buyer = buyerObj ? { id: buyerObj.id, username: buyerObj.username } : { username: e.buyerUsername };
+        } else {
+            updates.buyer = null;
+        }
+
+        await this.updateExpense(e.id, updates);
+        this.showEditExpenseModal = false;
+        },
+
 
         async fetchMyData() {
             if (!this.userId) return;
