@@ -23,7 +23,18 @@ def register_user(req: func.HttpRequest) -> func.HttpResponse:
     try:
         data = req.get_json()        
         user = User.from_dict(data)
-        logging.info(f"Register attempt for username={user.username}")    
+        logging.info(f"Register attempt for username={user.username}") 
+        
+        try:
+            UserContainerProxy.read_item(item=user.username, partition_key=user.username)
+            return func.HttpResponse(
+                json.dumps({"result": False, "msg": "Username already exists"}),
+                status_code=200,
+                mimetype="application/json"
+            )
+        except CosmosResourceNotFoundError:
+            pass
+           
         if not bcrypt.identify(user.password):
             user.password = hash_password(user.password)
         logging.warning(f"DEBUG stored password: {user.password}")

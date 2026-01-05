@@ -277,7 +277,7 @@ var app = new Vue({
                 } else {
                     this.statusMessage = data.msg;
                     this.statusColor = 'red';
-                } w
+                }
             } catch (error) {
                 console.error('Error:', error);
                 this.statusMessage = 'Connection failed';
