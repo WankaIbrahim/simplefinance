@@ -515,6 +515,125 @@ var app = new Vue({
                 console.error('Error upvoting:', error);
             }
         },
+        exportCSV() {
+        if (!this.activeGroup || !Array.isArray(this.activeGroup.items)) return;
+
+        const rows = this.activeGroup.items.map(it => ({
+            Description: it.name || "",
+            Price: Number(it.price || 0),
+            Quantity: Number(it.quantity || 1),
+            Total: (Number(it.price || 0) * Number(it.quantity || 1)).toFixed(2),
+            Buyer: (it.buyer && it.buyer.username) ? it.buyer.username : (it.buyer || ""),
+            Purchased: it.purchased ? "Yes" : "No",
+            Votes: (it.voted && Array.isArray(it.voted)) ? it.voted.length : 0,
+            Prioritised: it.priority ? "Yes" : "No",
+            URL: it.url || ""
+        }));
+
+        const headers = Object.keys(rows[0] || {
+            Description: "", Price: "", Quantity: "", Total: "", Buyer: "", Purchased: "", Votes: "", Prioritised: "", URL: ""
+        });
+
+        const escapeCSV = (v) => {
+            const s = String(v ?? "");
+            if (s.includes('"') || s.includes(",") || s.includes("\n")) {
+            return `"${s.replace(/"/g, '""')}"`;
+            }
+            return s;
+        };
+
+        const csv = [
+            headers.join(","),
+            ...rows.map(r => headers.map(h => escapeCSV(r[h])).join(","))
+        ].join("\n");
+
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const filename = `${(this.activeGroup.name || "group")}-expenses.csv`;
+        this.downloadBlob(blob, filename);
+        },
+
+        exportExcel() {
+        if (!this.activeGroup || !Array.isArray(this.activeGroup.items)) return;
+
+        const items = this.activeGroup.items;
+
+        const html = `
+            <html xmlns:o="urn:schemas-microsoft-com:office:office"
+                xmlns:x="urn:schemas-microsoft-com:office:excel"
+                xmlns="http://www.w3.org/TR/REC-html40">
+            <head>
+                <meta charset="utf-8">
+                <!--[if gte mso 9]>
+                <xml>
+                <x:ExcelWorkbook>
+                    <x:ExcelWorksheets>
+                    <x:ExcelWorksheet>
+                        <x:Name>Expenses</x:Name>
+                        <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+                    </x:ExcelWorksheet>
+                    </x:ExcelWorksheets>
+                </x:ExcelWorkbook>
+                </xml>
+                <![endif]-->
+            </head>
+            <body>
+                <table border="1">
+                <thead>
+                    <tr>
+                    <th>Description</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Total</th>
+                    <th>Buyer</th>
+                    <th>Purchased</th>
+                    <th>Votes</th>
+                    <th>Prioritised</th>
+                    <th>URL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${items.map(it => {
+                    const price = Number(it.price || 0);
+                    const qty = Number(it.quantity || 1);
+                    const total = (price * qty).toFixed(2);
+                    const buyer = (it.buyer && it.buyer.username) ? it.buyer.username : (it.buyer || "");
+                    const esc = (s) => String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+                    return `
+                        <tr>
+                        <td>${esc(it.name || "")}</td>
+                        <td>${price}</td>
+                        <td>${qty}</td>
+                        <td>${total}</td>
+                        <td>${esc(buyer)}</td>
+                        <td>${it.purchased ? "Yes" : "No"}</td>
+                        <td>${(it.voted && Array.isArray(it.voted)) ? it.voted.length : 0}</td>
+                        <td>${it.priority ? "Yes" : "No"}</td>
+                        <td>${esc(it.url || "")}</td>
+                        </tr>
+                    `;
+                    }).join("")}
+                </tbody>
+                </table>
+            </body>
+            </html>
+        `.trim();
+
+        const blob = new Blob([html], { type: "application/vnd.ms-excel;charset=utf-8;" });
+        const filename = `${(this.activeGroup.name || "group")}-expenses.xls`;
+        this.downloadBlob(blob, filename);
+        },
+
+        downloadBlob(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        },
+
 
 
         onPfpSelected(e) {
