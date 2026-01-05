@@ -166,7 +166,7 @@
                                     <td v-if="expense.url">
                                         <a :href="expense.url" target="_blank">Website</a>
                                     </td>
-                                    <td v-else>No link</td>
+                                    <td v-else>-</td>
                                     <td class="price">£{{ (expense.price * expense.quantity).toFixed(2) }}</td>
                                     <td>{{ expense.voted ? expense.voted.length : 0 }}</td>
                                     <td>
