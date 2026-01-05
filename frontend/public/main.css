@@ -1,20 +1,23 @@
-/* global variables - will apply to all pages */
 :root {
-    --bg-body: #232528;       /* Main dark background */
-    --bg-card: #565656;       /* White cards */
-    --bg-header: #222529;     /* Header specific dark */
+    --bg-body: #121418;       
+    --bg-card: #1e2229;       
+    --bg-input: #2a2f38;      
+    --bg-header: #1a1d21;     
     
-    --accent: #FFD700;        /* Cyber Yellow */
-    --accent-hover: #e6c200;  /* Darker Yellow */
-    --accent-text: #222529;   /* Text color on top of yellow buttons */
+    --accent: #FFD700;
+    --accent-hover: #e6c200;  
+    --accent-text: #1a1d21;   
 
-    --text-main: #212529;     /* Dark text for inside cards */
-    --text-light: #555555;    /* Gray text */
-    --text-white: #ffffff;    /* White text for dark backgrounds */
+    --text-main: #e0e6ed;     
+    --text-light: #949aa3;    
+    --text-white: #ffffff;
+    --text-danger: #ff6b6b;
     
-    --border: #D1D5DB;
+    --border: #353a45;
+    --radius-sm: 8px;
+    --radius-md: 12px;
     
-    --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 
     --layout-width: 1400px;
 }
@@ -32,17 +35,18 @@ body {
 a { color: var(--accent); text-decoration: none; transition: color 0.2s; }
 a:hover { text-decoration: underline; color: var(--accent-hover); }
 
-h1, h2, h3 { margin-top: 0; color: #878787; }
+h1, h2, h3, h4 { margin-top: 0; color: #ffffff; font-weight: 700; }
 
 .app-layout {
     display: flex;
     flex-direction: row;
-    justify-content: center;
+    justify-content: flex-start; 
     gap: 20px;
     max-width: var(--layout-width);
     margin: 0 auto;
     padding: 20px;
     min-height: calc(100vh - 160px); 
+    position: relative;
 }
 
 @media (max-width: 900px) {
@@ -52,20 +56,36 @@ h1, h2, h3 { margin-top: 0; color: #878787; }
 
 .card, .sidebar-left, .sidebar-right, .content {
     background: var(--bg-card);
-    
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.sidebar-left, .sidebar-right { width: 250px; flex-shrink: 0; }
-.content { flex-grow: 1; }
+.sidebar-left, .sidebar-right { 
+    width: 260px; 
+    flex-shrink: 0;
+    position: sticky;
+    top: 85px;
+    align-self: flex-start;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
 
+.content { 
+    flex-grow: 1; 
+    width: 100%; 
+    min-width: 0;
+}
+
+/* Global button styles */
 .btn {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     padding: 10px 20px;
-    border-radius: 10px;
+    border-radius: var(--radius-sm);
     border: 1px solid transparent;
     font-weight: 600;
     cursor: pointer;
@@ -83,31 +103,45 @@ h1, h2, h3 { margin-top: 0; color: #878787; }
     background-color: var(--accent-hover);
     transform: translateY(-2px);
     text-decoration: none;
+    box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
 }
 
 .btn-danger {
-    background: #fff;
-    color: #b42318;
-    border-color: #f0c2bd;
+    background: rgba(255, 77, 77, 0.1);
+    color: var(--text-danger);
+    border-color: var(--text-danger);
+}
+.btn-danger:hover {
+    background: var(--text-danger);
+    color: white;
 }
 
 .btn-outline-primary {
     background: transparent;
-    border: 1px solid var(--accent);
+    border: 2px solid var(--accent);
     color: var(--accent);
 }
+.btn-outline-primary:hover {
+    background: var(--accent);
+    color: var(--accent-text);
+}
 
-input[type="text"], input[type="password"], input[type="email"], input[type="number"], select {
+/* Inputs styles */
+input[type="text"], input[type="password"], input[type="email"], input[type="number"], select, textarea {
     width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
+    padding: 12px;
+    margin-bottom: 15px;
+    background-color: var(--bg-input);
     border: 1px solid var(--border);
-    border-radius: 5px;
+    border-radius: var(--radius-sm);
+    color: white;
     font-size: 1rem;
     outline: none;
+    transition: border-color 0.2s;
 }
-input:focus { border-color: var(--accent); }
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
 
+/* Table view */
 table { width: 100%; border-collapse: collapse; margin-top: 10px; }
 th, td { text-align: left; padding: 12px; border-bottom: 1px solid var(--border); }
-th { background-color: #f8f9fa; font-weight: bold; }
+th { background-color: var(--bg-input); font-weight: bold; color: var(--text-light); }

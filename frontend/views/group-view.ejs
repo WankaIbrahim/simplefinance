@@ -38,7 +38,7 @@
                     </div>
                     <div class="group-header">
                         <h1>{{activeGroup.name}}</h1>
-                        <p class="description" style="color:black">{{ activeGroup.description || "No description" }}</p>
+                        <p class="description">{{ activeGroup.description || "No description" }}</p>
                     </div>
 
                     <div v-if="isCurrentUserAdmin" class="admin-toolbar card">
@@ -170,32 +170,24 @@
                                     <td class="price">£{{ (expense.price * expense.quantity).toFixed(2) }}</td>
                                     <td>{{ expense.voted ? expense.voted.length : 0 }}</td>
                                     <td>
-                                        <button @click="upvote(expense)" class="btn-icon upvote"
-                                            v-if="!expense.voted || !expense.voted.includes(inputUsername)">
-                                            ▲
-                                        </button>
-                                        <button @click="downvote(expense)" class="btn-icon downvote" v-else>
-                                            ▼
-                                        </button>
-
-                                        <div style="margin-top: 10px;">
-                                            <label style="display:flex; align-items:center; gap:10px; margin:6px 0;">
-                                                <input type="checkbox" :checked="expense.priority"
-                                                    @change="prioritiseExpense(expense)">
-
-                                                Prioritise items for purchasing
-                                            </label>
-
-                                            <label style="display:flex; align-items:center; gap:10px; margin:6px 0;">
-                                                <input type="radio" @click="confirmRemoveExpense(expense)">
-                                                Remove item from list
-                                            </label>
-
-                                            <label style="display:flex; align-items:center; gap:10px; margin:6px 0;">
-                                                <input type="radio"
-                                                    @change="openEditExpense(expense); $event.target.checked = false">
-                                                Update item details
-                                            </label>
+                                        <div style="display: flex; gap: 5px;">
+                                            <button @click="upvote(expense)" class="btn-icon upvote" title="Upvote">▲</button>
+                                            <button @click="downvote(expense)" class="btn-icon downvote" title="Downvote">▼</button>
+                                        </div>
+                                        
+                                        <div style="margin-top: 5px;">
+                                            <button @click="toggleActionMenu(expense)" class="btn-xs" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size: 0.8rem;">
+                                                More...
+                                            </button>
+                                            
+                                            <div v-if="expense.showActions" style="position: absolute; background: var(--bg-card); border: 1px solid var(--border); padding: 10px; border-radius: 8px; z-index: 10; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                                                 <label style="display:block; margin-bottom:8px; cursor:pointer;">
+                                                    <input type="checkbox" :checked="expense.priority" @change="prioritiseExpense(expense)"> Prioritize
+                                                 </label>
+                                                 <div style="height: 1px; background: var(--border); margin: 5px 0;"></div>
+                                                 <button @click="openEditExpense(expense)" style="display:block; width:100%; text-align:left; background:none; border:none; color: var(--text-main); padding: 5px; cursor: pointer;">Edit</button>
+                                                 <button @click="confirmRemoveExpense(expense)" style="display:block; width:100%; text-align:left; background:none; border:none; color: var(--text-danger); padding: 5px; cursor: pointer;">Delete</button>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>

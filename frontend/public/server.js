@@ -228,9 +228,6 @@ var app = new Vue({
         isCurrentUserInGroup() {
             return this.isCurrentUserAdmin || this.isCurrentUserMember || this.isCurrentUserGuest;
         },
-        // currentPath() {
-        // return window.location.pathname;
-        // }
         onlineFriends() {
             return this.friends;
         },
@@ -340,7 +337,6 @@ var app = new Vue({
                 if (data.result) {
                     await this.fetchGroupDetails(this.activeGroup.groupId);
 
-                    // Clear form
                     this.item = '';
                     this.quantity = 1;
                     this.payer = '';
@@ -424,8 +420,14 @@ var app = new Vue({
                     body: JSON.stringify({ groupId: id })
                 });
                 const data = await response.json();
-
+        
                 if (data.result && data.group) {
+                    if (data.group.items) {
+                        data.group.items.forEach(item => {
+                            item.showActions = false; 
+                        });
+                    }
+        
                     this.activeGroup = data.group;
                     this.groupNotFound = false;
                 } else {
@@ -961,8 +963,14 @@ var app = new Vue({
             }
         },
         toggleActionMenu(expense) {
-            (this.activeGroup?.items || []).forEach(i => i.showActions = false);
-            expense.showActions = !expense.showActions;
+            const wasOpen = expense.showActions;
+        
+            if (this.activeGroup && this.activeGroup.items) {
+                this.activeGroup.items.forEach(i => i.showActions = false);
+            }
+            if (!wasOpen) {
+                expense.showActions = true;
+            }
         },
 
         closeAllActionMenus() {

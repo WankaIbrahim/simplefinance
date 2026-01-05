@@ -87,7 +87,7 @@
                                 </div>
                             </div>
                         <hr>
-                        <div class="spending-groups" style="display:grid">
+                        <div class="spending-groups" style="display:grid; color: black">
                             <div class="personal-groups">
                                 <h2>Personal Groups</h2>
                                 <div class="row">
@@ -160,100 +160,70 @@
 
                                     <div class="modal-overlay" v-if="showCreateGroupModal"
                                         @mousedown.self="showCreateGroupModal = false" style="background-color: azure;">
-                                        <div class="modal-card create-group-modal">
-                                            <div class="modal-header">
-                                                <h2>Create New Group</h2>
-                                                <button class="close-btn"
-                                                    @click="showCreateGroupModal = false">&times;</button>
-                                            </div>
-
-                                            <div class="modal-body">
-                                                <div class="form-group">
-                                                    <label>Group Name</label>
-                                                    <input type="text" v-model="newGroup.name"
-                                                        placeholder="e.g. Ski Trip 2026">
+                                        <div class="modal-overlay" v-if="showCreateGroupModal" @mousedown.self="showCreateGroupModal = false">
+                                            <div class="modal-card create-group-modal">
+                                                <div class="modal-header">
+                                                    <h2>{{ newGroupItems.length > 0 ? 'Review & Create Group' : 'Create New Group' }}</h2>
+                                                    <button class="close-btn" @click="showCreateGroupModal = false" style="color:white; font-size:1.5rem; background:none; border:none; cursor:pointer;">&times;</button>
                                                 </div>
-
-                                                <div class="form-group">
-                                                    <label>Description</label>
-                                                    <input type="text" v-model="newGroup.description"
-                                                        placeholder="Short description...">
-                                                </div>
-
-                                                <div class="form-group">
-                                                    <label>Budget (£)</label>
-                                                    <input type="number" v-model="newGroup.budget" min="0">
-                                                </div>
-
-                                                <hr>
-
-                                                <div class="member-selection">
-                                                    <h3>Add Members</h3>
-
-                                                    <div class="search-box">
-                                                        <input type="text" v-model="memberSearchQuery"
-                                                            @input="searchMembers"
-                                                            placeholder="Search username or email...">
-
-                                                        <div class="search-dropdown"
-                                                            v-if="memberSearchResults.length > 0">
-                                                            <div class="search-item" v-for="user in memberSearchResults"
-                                                                :key="user.id">
-                                                                <img :src="user.pfpUrl || '/static/default-avatar.png'"
-                                                                    class="avatar-sm">
-                                                                <span class="username">{{ user.username }}</span>
-                                                                <div class="add-btns">
-                                                                    <button class="btn-xs btn-outline"
-                                                                        @click="addMember(user, 'admins')">Admin</button>
-                                                                    <button class="btn-xs btn-outline"
-                                                                        @click="addMember(user, 'users')">User</button>
-                                                                    <button class="btn-xs btn-outline"
-                                                                        @click="addMember(user, 'guests')">Guest</button>
+                                        
+                                                <div class="modal-body">
+                                                    <div class="form-group">
+                                                        <label>Group Name</label>
+                                                        <input type="text" v-model="newGroup.name" placeholder="e.g. Ski Trip 2026">
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label>Description</label>
+                                                        <input type="text" v-model="newGroup.description" placeholder="Short description...">
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label>Budget (£)</label>
+                                                        <input type="number" v-model="newGroup.budget" min="0">
+                                                    </div>
+                                        
+                                                    <div v-if="newGroupItems.length > 0" style="background: rgba(255, 215, 0, 0.05); padding: 15px; border-radius: 8px; border: 1px solid var(--accent); margin-bottom: 20px;">
+                                                        <h4 style="color: var(--accent); margin-bottom: 10px;">✨ AI Suggestions</h4>
+                                                        <p class="text-muted" style="font-size: 0.9rem; margin-bottom: 10px;">Review items before creating the group.</p>
+                                                        
+                                                        <div class="items-list-preview" style="max-height: 200px; overflow-y: auto;">
+                                                            <div v-for="(item, idx) in newGroupItems" :key="idx" class="preview-item" 
+                                                                 style="background: var(--bg-card); display: flex; justify-content: space-between; padding: 10px; margin-bottom: 8px; border-radius: 6px; border: 1px solid var(--border);">
+                                                                <div>
+                                                                    <strong style="color: var(--text-main);">{{ item.name }}</strong>
+                                                                    <div style="font-size: 0.85rem; color: var(--text-muted);">£{{ item.price }} x {{ item.quantity }}</div>
                                                                 </div>
+                                                                <button @click="removeNewItem(idx)" style="background: none; border: none; color: var(--text-danger); font-weight: bold; cursor: pointer;">&times;</button>
                                                             </div>
                                                         </div>
                                                     </div>
-
-                                                    <div class="selected-lists">
-
-                                                        <div class="role-list">
-                                                            <h4>Admins</h4>
-                                                            <div class="chip" v-for="(u, idx) in selectedAdmins"
-                                                                :key="'a'+u.id">
-                                                                {{ u.username }}
-                                                                <span class="remove"
-                                                                    @click="removeMember(idx, 'admins')">&times;</span>
-                                                            </div>
+                                        
+                                                    <hr>
+                                        
+                                                    <div class="member-selection">
+                                                        <h3>Add Members</h3>
+                                                        <div class="search-box">
+                                                             <input type="text" v-model="memberSearchQuery" @input="searchMembers" placeholder="Search username...">
+                                                             <div class="search-dropdown" v-if="memberSearchResults.length > 0" style="background: var(--bg-card); border-color: var(--border);">
+                                                                <div class="search-item" v-for="user in memberSearchResults" :key="user.id" style="border-bottom-color: var(--border);">
+                                                                    <img :src="user.pfpUrl || '/static/default-avatar.png'" class="avatar-sm">
+                                                                    <span class="username" style="color: var(--text-main);">{{ user.username }}</span>
+                                                                    <div class="add-btns">
+                                                                        <button class="btn-xs btn-outline-primary" @click="addMember(user, 'admins')">Admin</button>
+                                                                        <button class="btn-xs btn-outline-primary" @click="addMember(user, 'users')">User</button>
+                                                                        <button class="btn-xs btn-outline-primary" @click="addMember(user, 'guests')">Guest</button>
+                                                                    </div>
+                                                                </div>
+                                                             </div>
                                                         </div>
-
-                                                        <div class="role-list" v-if="selectedUsers.length > 0">
-                                                            <h4>Members</h4>
-                                                            <div class="chip" v-for="(u, idx) in selectedUsers"
-                                                                :key="'u'+u.id">
-                                                                {{ u.username }}
-                                                                <span class="remove"
-                                                                    @click="removeMember(idx, 'users')">&times;</span>
-                                                            </div>
                                                         </div>
-
-                                                        <div class="role-list" v-if="selectedGuests.length > 0">
-                                                            <h4>Guests</h4>
-                                                            <div class="chip" v-for="(u, idx) in selectedGuests"
-                                                                :key="'g'+u.id">
-                                                                {{ u.username }}
-                                                                <span class="remove"
-                                                                    @click="removeMember(idx, 'guests')">&times;</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
                                                 </div>
-                                            </div>
-
-                                            <div class="modal-footer">
-                                                <button class="btn btn-secondary"
-                                                    @click="showCreateGroupModal = false">Cancel</button>
-                                                <button class="btn btn-success" @click="createGroup">Create
-                                                    Group</button>
+                                        
+                                                <div class="modal-footer" style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+                                                    <button class="btn btn-secondary" @click="showCreateGroupModal = false" style="background: transparent; color: var(--text-muted); border: 1px solid var(--border);">Cancel</button>
+                                                    <button class="btn btn-success" @click="createGroup">
+                                                        {{ newGroupItems.length > 0 ? 'Accept Suggestions & Create' : 'Create Group' }}
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
