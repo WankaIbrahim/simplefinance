@@ -1249,7 +1249,7 @@ var app = new Vue({
             
             this.aiLoading = true;
             try {
-                const response = await fetch('/group/ai-suggest', {
+                const response = await fetch('/group/items/suggest', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(this.aiData)
