@@ -7,8 +7,6 @@ const azureModel = require('./src/azureModel');
 const fetch = (...args) =>
   import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
-const BACKEND_ENDPOINT = process.env.BACKEND || 'http://localhost:8181';
-const AZURE_API_KEY = process.env.AZURE_API_KEY || null;
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
@@ -48,16 +46,18 @@ app.get('/', (req, res) => {
 app.get('/display', (req, res) => {
     res.render('display');
 });
+
 app.get('/group-view', (req, res) => {
     res.render('group-view');
 });
+
 app.get('/profile', (req, res) => {
     res.render('profile');
 });
+
 app.get("/settings", (req, res) => {
   res.render("settings");
 });
-
 
 app.post('/my-groups', async (req, res) => {
     console.log('Fetching admin groups for user:', req.body.username);
@@ -79,12 +79,13 @@ app.post('/membership-groups', async (req, res) => {
     const result = await azureModel.getGroupsByMember(username);
     res.json(result);
 });
+
 app.post('/get-group-details', async (req, res) => {
     const { groupId } = req.body;
     const result = await azureModel.getGroupById(groupId);
     res.json(result);
 });
-//
+
 app.post('/get-group-by-id', async (req, res) => {
     const { groupId } = req.body;
     const result = await azureModel.getGroupById(groupId);
@@ -106,6 +107,7 @@ app.post('/login', async (req, res) => {
     const result = await azureModel.login(username, password);
     res.json(result);
 });
+
 app.post('/register', async (req, res) => {
     console.log('Register Request Received');
     const { username, password } = req.body;
@@ -148,7 +150,6 @@ app.post('/vote-item', async (req, res) => {
     res.json(result);
 });
 
-// friend logic
 app.post('/friend/request', async (req, res) => {
   const { fromId, fromUsername, toUsername } = req.body;
   const result = await azureModel.sendFriendRequest(fromId, fromUsername, toUsername);
@@ -222,35 +223,6 @@ app.post('/group/ai-suggest', async (req, res) => {
   const result = await azureModel.getAiSuggestions(idea, people, budget, notes);
   res.json(result);
 });
-
-async function callAzureAPI(endpoint, method, body = null) {
-  const url = `${BACKEND_ENDPOINT}${endpoint}`;
-  const upperMethod = method.toUpperCase();
-
-  const options = {
-    method: upperMethod,
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  };
-
-  if (AZURE_API_KEY) {
-    options.headers['x-functions-key'] = AZURE_API_KEY;
-  }
-
-  if (body && upperMethod !== 'GET') {
-    options.body = JSON.stringify(body);
-  }
-
-  const response = await fetch(url, options);
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-
-  return response.json();
-}
-
 
 function startServer() {
   const PORT = process.env.PORT || 8080;

@@ -25,7 +25,7 @@ def register_user(req: func.HttpRequest) -> func.HttpResponse:
         user = User.from_dict(data)
         logging.info(f"Register attempt for username={user.username}")    
         if not bcrypt.identify(user.password):
-            user.password = hash_password(user.password) # now saves the hashed password instead
+            user.password = hash_password(user.password)
         logging.warning(f"DEBUG stored password: {user.password}")
         UserContainerProxy.create_item(body=user.to_dict())
         return func.HttpResponse(
@@ -544,10 +544,7 @@ def get_group(req: func.HttpRequest) -> func.HttpResponse:
             status_code=400,
             mimetype="application/json"
         )
-    
 
-# helper function to get all groups where a user is an admin
-# from Nikola
 @app.route(route="group/list/admin", methods=[func.HttpMethod.GET], auth_level=func.AuthLevel.FUNCTION)
 def get_groups_by_admin(req: func.HttpRequest) -> func.HttpResponse:
     try:
@@ -579,9 +576,7 @@ def get_groups_by_admin(req: func.HttpRequest) -> func.HttpResponse:
             status_code=400,
             mimetype="application/json"
         )
-    
-    # some helper functions
-    # from Nikola
+
 @app.route(route="group/list/member", methods=[func.HttpMethod.GET], auth_level=func.AuthLevel.FUNCTION)
 def get_groups_by_member(req: func.HttpRequest) -> func.HttpResponse:
     username = req.params.get("username")
@@ -900,9 +895,11 @@ def send_friend_request(req: func.HttpRequest) -> func.HttpResponse:
             #sending req user
             user_sender = UserContainerProxy.read_item(item= user_sending_req_id, partition_key=user_sending_req)
             #receiving req user
-            SQL = """ SELECT TOP 1 * FROM c WHERE c.username = @username"""
-            parameters =  [{"name" : "@username", "value": user_receiving_req}]
-            items = list(UserContainerProxy.query_items(query=SQL, parameters=parameters, enable_cross_partition_query=True))
+            items = list(UserContainerProxy.query_items(
+                query="SELECT TOP 1 * FROM c WHERE c.username = @username",
+                parameters=[{"name" : "@username", "value": user_receiving_req}],
+                enable_cross_partition_query=True
+            ))
             user_receiver = items[0] if items else None
             if user_receiver is None:
                 return func.HttpResponse(
@@ -929,6 +926,7 @@ def send_friend_request(req: func.HttpRequest) -> func.HttpResponse:
         return func.HttpResponse(
             json.dumps({"result": False, "msg": str(err)}), status_code=400, mimetype="application/json"
         )
+
 @app.route(route="user/friend/response", methods=[func.HttpMethod.POST], auth_level=func.AuthLevel.FUNCTION)    
 def respond_friend_request(req : func.HttpRequest) -> func.HttpResponse:
     try:
@@ -1180,6 +1178,7 @@ def search_users(req: func.HttpRequest) -> func.HttpResponse:
             status_code=400,
             mimetype="application/json"
         )
+
 @app.route(route="group/invite", methods=[func.HttpMethod.POST], auth_level=func.AuthLevel.FUNCTION)
 def invite_user_to_group(req: func.HttpRequest) -> func.HttpResponse:
     try:
@@ -1268,7 +1267,6 @@ def invite_user_to_group(req: func.HttpRequest) -> func.HttpResponse:
             mimetype="application/json"
         )
 
-    
 @app.route(route="group/description/set", methods=[func.HttpMethod.POST], auth_level=func.AuthLevel.FUNCTION)    
 def update_description(req: func.HttpRequest) -> func.HttpResponse:
     try:
@@ -1289,7 +1287,6 @@ def update_description(req: func.HttpRequest) -> func.HttpResponse:
         return func.HttpResponse(json.dumps({"result": True, "msg": "OK"}), status_code=200, mimetype="application/json")
     except Exception as e:
         return func.HttpResponse(json.dumps({"result": False, "msg": str(e)}), status_code=400, mimetype="application/json")
-    
 
 @app.route(route="group/items/suggest", methods=[func.HttpMethod.POST], auth_level=func.AuthLevel.FUNCTION)
 def group_items_ai_suggestion(req: func.HttpRequest) -> func.HttpResponse:
