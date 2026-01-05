@@ -47,7 +47,7 @@
                             <button class="btn btn-outline-primary" @click="showExpenseModal = true">Add
                                 Expense</button> <button class="btn btn-outline-primary"
                                 @click="openGroupSettings">Group Settings</button>
-                                <button class="btn btn-outline-primary" @click="openInviteModal">Invite Member</button>
+                            <button class="btn btn-outline-primary" @click="openInviteModal">Invite Member</button>
                             <button class="btn btn-danger" @click="deleteGroup">Delete Group</button>
                         </div>
                     </div>
@@ -136,20 +136,21 @@
                                     <th>Price</th>
                                     <th>Buyer</th>
                                     <th>Qty</th>
+                                    <th>Link</th>
                                     <th>Total</th>
                                     <th>Votes</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="expense in sortedGroupItems" :key="expense.id" :class="{ 'purchased-row': expense.purchased }">
+                                <tr v-for="expense in sortedGroupItems" :key="expense.id"
+                                    :class="{ 'purchased-row': expense.purchased }">
                                     <td>
                                         <div style="display:flex; align-items:center; gap:10px;">
-                                             <input type="checkbox" 
-                                                    :checked="expense.purchased" 
-                                                    @change="togglePurchased(expense)"
-                                                    style="width:18px; height:18px; cursor:pointer;">
-                                             <span>{{ expense.name }}</span>
+                                            <input type="checkbox" :checked="expense.purchased"
+                                                @change="togglePurchased(expense)"
+                                                style="width:18px; height:18px; cursor:pointer;">
+                                            <span>{{ expense.name }}</span>
                                         </div>
                                     </td>
                                     <td class="price">£{{ expense.price }}</td>
@@ -159,6 +160,10 @@
                                         <span v-else class="text-muted">-</span>
                                     </td>
                                     <td>{{ expense.quantity }}</td>
+                                    <td v-if="expense.url">
+                                        <a :href="expense.url" target="_blank">Website</a>
+                                    </td>
+                                    <td v-else>No link</td>
                                     <td class="price">£{{ (expense.price * expense.quantity).toFixed(2) }}</td>
                                     <td>{{ expense.voted ? expense.voted.length : 0 }}</td>
                                     <td>
@@ -172,11 +177,8 @@
 
                                         <div style="margin-top: 10px;">
                                             <label style="display:flex; align-items:center; gap:10px; margin:6px 0;">
-                                                <input
-                                                type="checkbox"
-                                                :checked="expense.priority"
-                                                @change="prioritiseExpense(expense)"
-                                                >
+                                                <input type="checkbox" :checked="expense.priority"
+                                                    @change="prioritiseExpense(expense)">
 
                                                 Prioritise items for purchasing
                                             </label>
@@ -187,7 +189,8 @@
                                             </label>
 
                                             <label style="display:flex; align-items:center; gap:10px; margin:6px 0;">
-                                                <input type="radio" @change="openEditExpense(expense); $event.target.checked = false">
+                                                <input type="radio"
+                                                    @change="openEditExpense(expense); $event.target.checked = false">
                                                 Update item details
                                             </label>
                                         </div>
@@ -252,33 +255,32 @@
                     style="width: 50px;">
             </div>
             <div class="modal-overlay" v-if="showInviteModal" @click.self="closeInviteModal">
-            <div class="modal-card" style="max-width: 520px;">
-                <div class="modal-header">
-                <h2>Invite Member</h2>
-                <button class="close-btn" @click="closeInviteModal">&times;</button>
-                </div>
+                <div class="modal-card" style="max-width: 520px;">
+                    <div class="modal-header">
+                        <h2>Invite Member</h2>
+                        <button class="close-btn" @click="closeInviteModal">&times;</button>
+                    </div>
 
-                <div class="modal-body">
-                <div class="form-group">
-                    <label>Username or Email</label>
-                    <input type="text"
-                        v-model.trim="inviteIdentifier"
-                        placeholder="e.g. husam3 or husam@email.com"
-                        @keyup.enter="sendInvite" />
-                </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>Username or Email</label>
+                            <input type="text" v-model.trim="inviteIdentifier"
+                                placeholder="e.g. husam3 or husam@email.com" @keyup.enter="sendInvite" />
+                        </div>
 
-                <p v-if="inviteStatusMessage" class="small fw-bold" :style="{ color: inviteStatusColor }">
-                    {{ inviteStatusMessage }}
-                </p>
-                </div>
+                        <p v-if="inviteStatusMessage" class="small fw-bold" :style="{ color: inviteStatusColor }">
+                            {{ inviteStatusMessage }}
+                        </p>
+                    </div>
 
-                <div class="modal-footer">
-                <button class="btn btn-secondary" @click="closeInviteModal">Cancel</button>
-                <button class="btn btn-success" :disabled="inviteSending || !inviteIdentifier" @click="sendInvite">
-                    {{ inviteSending ? "Sending..." : "Send Invite" }}
-                </button>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" @click="closeInviteModal">Cancel</button>
+                        <button class="btn btn-success" :disabled="inviteSending || !inviteIdentifier"
+                            @click="sendInvite">
+                            {{ inviteSending ? "Sending..." : "Send Invite" }}
+                        </button>
+                    </div>
                 </div>
-            </div>
             </div>
 
             <div class="modal-overlay" v-if="showRemoveConfirm" @click.self="closeRemoveConfirm">
@@ -327,7 +329,8 @@
                             <label>Buyer</label>
                             <select v-model="editExpenseData.buyerUsername">
                                 <option value="">-</option>
-                                <option v-for="m in [...(activeGroup.admins||[]), ...(activeGroup.users||[])]" :value="m.username">
+                                <option v-for="m in [...(activeGroup.admins||[]), ...(activeGroup.users||[])]"
+                                    :value="m.username">
                                     {{ m.username }}
                                 </option>
                             </select>
@@ -358,9 +361,16 @@
                             <input type="number" v-model="quantity" step="1">
                         </div>
                     </div>
+                    <div class="form-row">
+
+                        <div class="form-group">
+                            <label>Link</label>
+                            <input type="text" v-model="url">
+                        </div>
+                    </div>
                     <div class="form-group">
                         <label>Who paid?</label>
-                        <select v-model="buyer">
+                        <select v-model="payer">
                             <option v-for="member in activeGroup.admins" :value="member.username">{{ member.username }}
                             </option>
                             <option v-for="member in activeGroup.users" :value="member.username">{{ member.username }}

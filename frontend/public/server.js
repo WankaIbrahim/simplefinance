@@ -47,6 +47,7 @@ var app = new Vue({
         item: '',
         quantity: 0,
         payer: '',
+        url: '',
         price: 0.0,
         groupDescription: '',
 
@@ -67,7 +68,7 @@ var app = new Vue({
 
         // group creation logic
         showCreateGroupModal: false,
-        
+
         newGroup: {
             name: '',
             description: '',
@@ -79,7 +80,7 @@ var app = new Vue({
         inviteStatusMessage: '',
         inviteStatusColor: 'red',
 
-        
+
         // find users to add to a group
         memberSearchQuery: '',
         memberSearchResults: [],
@@ -91,15 +92,15 @@ var app = new Vue({
         selectedExpense: null,
 
         editExpenseData: {
-        id: null,
-        name: '',
-        price: 0,
-        quantity: 1,
-        buyerUsername: '',
-        url: ''
+            id: null,
+            name: '',
+            price: 0,
+            quantity: 1,
+            buyerUsername: '',
+            url: ''
         },
 
-        
+
         // Lists of selected people
         selectedAdmins: [],
         selectedUsers: [],
@@ -107,10 +108,10 @@ var app = new Vue({
 
         showGroupSettingsModal: false,
         editGroupData: {
-        name: '',
-        description: '',
-        budget: 0
-    },
+            name: '',
+            description: '',
+            budget: 0
+        },
     },
     mounted() {
         if (localStorage.getItem('loggedIn') === 'true') {
@@ -149,7 +150,7 @@ var app = new Vue({
             this.touchEndX = e.changedTouches[0].screenX;
             this.handleSwipe();
         });
-        
+
         if (window.location.pathname === '/settings' && this.userId) {
             this.fetchUserProfile(this.userId);
         }
@@ -169,19 +170,19 @@ var app = new Vue({
             });
         },
         sortedGroupItems() {
-        if (!this.activeGroup || !Array.isArray(this.activeGroup.items)) return [];
-        const items = [...this.activeGroup.items];
+            if (!this.activeGroup || !Array.isArray(this.activeGroup.items)) return [];
+            const items = [...this.activeGroup.items];
 
-        return items.sort((a, b) => {
-            const ap = a.priority ? 1 : 0;
-            const bp = b.priority ? 1 : 0;
+            return items.sort((a, b) => {
+                const ap = a.priority ? 1 : 0;
+                const bp = b.priority ? 1 : 0;
 
-            if (bp !== ap) return bp - ap; 
+                if (bp !== ap) return bp - ap;
 
-            const ar = a.priorityRank || 0;
-            const br = b.priorityRank || 0;
-            return ar - br;
-        });
+                const ar = a.priorityRank || 0;
+                const br = b.priorityRank || 0;
+                return ar - br;
+            });
         },
 
 
@@ -220,7 +221,7 @@ var app = new Vue({
         onlineFriends() {
             return this.friends;
         },
-        
+
         isFriend() {
             return this.friends && this.friends.includes(this.searchUsername);
         },
@@ -287,11 +288,27 @@ var app = new Vue({
                 return;
             }
 
+            let buyerObj = null;
+            if (this.payer) {
+                
+                const allMembers = [
+                    ...(this.activeGroup.admins || []),
+                    ...(this.activeGroup.users || []),
+                    ...(this.activeGroup.guests || [])
+                ];
+                const foundUser = allMembers.find(u => u.username === this.payer);
+                
+                if (foundUser) {
+                    buyerObj = { username: foundUser.username, id: foundUser.id };
+                }
+            }
+
             const newItem = {
                 name: this.item,
                 quantity: this.quantity || 1,
                 price: parseFloat(this.price),
-                buyer: this.payer ? { username: this.payer } : null,
+                url: this.url,
+                buyer: buyerObj,
                 purchased: false,
                 voted: []
             };
@@ -315,13 +332,26 @@ var app = new Vue({
                     this.quantity = 1;
                     this.payer = '';
                     this.price = 0.0;
+                    this.url = '';
                     this.buyer = '';
                 } else {
                     alert('Failed to add item: ' + data.msg);
+                    this.item = '';
+                    this.quantity = 1;
+                    this.payer = '';
+                    this.price = 0.0;
+                    this.url = '';
+                    this.buyer = '';
                 }
             } catch (error) {
                 console.error('Error adding item:', error);
                 alert('Failed to add item');
+                this.item = '';
+                    this.quantity = 1;
+                    this.payer = '';
+                    this.price = 0.0;
+                    this.url = '';
+                    this.buyer = '';
             }
         },
         async removeExpense(itemId) {
@@ -409,7 +439,7 @@ var app = new Vue({
                     this.searchUserPfp = data.user.pfpUrl || '';
                     this.inputEmail = data.user.email || '';
                     this.searchUserBio = data.user.bio || '';
-                    this.bioDraft = this.searchUserBio; 
+                    this.bioDraft = this.searchUserBio;
                 }
             } catch (error) {
                 console.error("Error loading profile:", error);
@@ -418,7 +448,7 @@ var app = new Vue({
 
         async saveBio() {
             if (!this.userId || this.searchUserId != this.userId) return;
-            
+
             try {
                 this.bioSaving = true;
                 this.bioStatus = "";
@@ -472,7 +502,7 @@ var app = new Vue({
                 console.error('Error upvoting:', error);
             }
         },
-        
+
 
         onPfpSelected(e) {
             const file = e.target.files && e.target.files[0];
@@ -497,65 +527,65 @@ var app = new Vue({
             this.pfpStatus = `Selected: ${file.name}`;
         },
         openInviteModal() {
-        this.showInviteModal = true;
-        this.inviteIdentifier = '';
-        this.inviteStatusMessage = '';
-        this.inviteStatusColor = 'red';
+            this.showInviteModal = true;
+            this.inviteIdentifier = '';
+            this.inviteStatusMessage = '';
+            this.inviteStatusColor = 'red';
         },
 
         closeInviteModal() {
-        this.showInviteModal = false;
+            this.showInviteModal = false;
         },
 
         async sendInvite() {
-        if (!this.inviteIdentifier || this.inviteSending) return;
+            if (!this.inviteIdentifier || this.inviteSending) return;
 
-        if (!this.activeGroup || !this.activeGroup.groupId) {
-            this.inviteStatusMessage = "Group not loaded.";
-            this.inviteStatusColor = "red";
-            return;
-        }
-
-        if (!this.isCurrentUserAdmin) {
-            this.inviteStatusMessage = "Only admins can invite members.";
-            this.inviteStatusColor = "red";
-            return;
-        }
-
-        this.inviteSending = true;
-        this.inviteStatusMessage = '';
-        this.inviteStatusColor = 'red';
-
-        try {
-            const response = await fetch('/group/invite', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                groupId: this.activeGroup.groupId,
-                identifier: this.inviteIdentifier, 
-                inviterId: this.userId,
-                inviterUsername: this.inputUsername
-            })
-            });
-
-            const data = await response.json().catch(() => ({}));
-
-            if (!response.ok || data.result === false) {
-            throw new Error(data.msg || "Invite failed");
+            if (!this.activeGroup || !this.activeGroup.groupId) {
+                this.inviteStatusMessage = "Group not loaded.";
+                this.inviteStatusColor = "red";
+                return;
             }
 
-            this.inviteStatusMessage = data.msg || "Invite sent!";
-            this.inviteStatusColor = "green";
+            if (!this.isCurrentUserAdmin) {
+                this.inviteStatusMessage = "Only admins can invite members.";
+                this.inviteStatusColor = "red";
+                return;
+            }
 
-            await this.fetchGroupDetails(this.activeGroup.groupId);
+            this.inviteSending = true;
+            this.inviteStatusMessage = '';
+            this.inviteStatusColor = 'red';
 
-            setTimeout(() => this.closeInviteModal(), 700);
-        } catch (err) {
-            this.inviteStatusMessage = err.message || "Something went wrong";
-            this.inviteStatusColor = "red";
-        } finally {
-            this.inviteSending = false;
-        }
+            try {
+                const response = await fetch('/group/invite', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        groupId: this.activeGroup.groupId,
+                        identifier: this.inviteIdentifier,
+                        inviterId: this.userId,
+                        inviterUsername: this.inputUsername
+                    })
+                });
+
+                const data = await response.json().catch(() => ({}));
+
+                if (!response.ok || data.result === false) {
+                    throw new Error(data.msg || "Invite failed");
+                }
+
+                this.inviteStatusMessage = data.msg || "Invite sent!";
+                this.inviteStatusColor = "green";
+
+                await this.fetchGroupDetails(this.activeGroup.groupId);
+
+                setTimeout(() => this.closeInviteModal(), 700);
+            } catch (err) {
+                this.inviteStatusMessage = err.message || "Something went wrong";
+                this.inviteStatusColor = "red";
+            } finally {
+                this.inviteSending = false;
+            }
         },
 
 
@@ -570,7 +600,7 @@ var app = new Vue({
                 this.pfpStatus = "Uploading...";
                 const form = new FormData();
                 form.append("pfp", this.pfpFile);
-                form.append("userId", this.userId); 
+                form.append("userId", this.userId);
 
                 const uploadRes = await fetch("/upload-pfp", {
                     method: "POST",
@@ -786,7 +816,7 @@ var app = new Vue({
                     this.searchUserPfp = data.user.pfpUrl || '';
                     this.inputEmail = data.user.email || '';
                     this.searchUserBio = data.user.bio || '';
-                    this.bioDraft = this.searchUserBio; 
+                    this.bioDraft = this.searchUserBio;
 
                     if (this.userId === id) {
                         this.friends = data.user.friends || [];
@@ -799,93 +829,93 @@ var app = new Vue({
             }
         },
         toggleActionMenu(expense) {
-        (this.activeGroup?.items || []).forEach(i => i.showActions = false);
-        expense.showActions = !expense.showActions;
+            (this.activeGroup?.items || []).forEach(i => i.showActions = false);
+            expense.showActions = !expense.showActions;
         },
 
         closeAllActionMenus() {
-        (this.activeGroup?.items || []).forEach(i => i.showActions = false);
+            (this.activeGroup?.items || []).forEach(i => i.showActions = false);
         },
 
 
         async prioritiseExpense(expense) {
-        const newPriority = !expense.priority;
+            const newPriority = !expense.priority;
 
-        const updates = newPriority
-            ? { priority: true, priorityRank: Date.now() }
-            : { priority: false, priorityRank: null };
+            const updates = newPriority
+                ? { priority: true, priorityRank: Date.now() }
+                : { priority: false, priorityRank: null };
 
-        await this.updateExpense(expense.id, updates);
+            await this.updateExpense(expense.id, updates);
         },
 
         confirmRemoveExpense(expense) {
-        this.closeAllActionMenus();
-        this.selectedExpense = expense;
-        this.showRemoveConfirm = true;
+            this.closeAllActionMenus();
+            this.selectedExpense = expense;
+            this.showRemoveConfirm = true;
         },
 
         closeRemoveConfirm() {
-        this.showRemoveConfirm = false;
-        this.selectedExpense = null;
+            this.showRemoveConfirm = false;
+            this.selectedExpense = null;
         },
 
         async removeSelectedExpense() {
-        if (!this.selectedExpense) return;
-        const id = this.selectedExpense.id;
+            if (!this.selectedExpense) return;
+            const id = this.selectedExpense.id;
 
-        this.showRemoveConfirm = false;
-        this.selectedExpense = null;
+            this.showRemoveConfirm = false;
+            this.selectedExpense = null;
 
-        await this.removeExpense(id);
+            await this.removeExpense(id);
         },
 
         openEditExpense(expense) {
-        this.closeAllActionMenus();
-        this.selectedExpense = expense;
+            this.closeAllActionMenus();
+            this.selectedExpense = expense;
 
-        this.editExpenseData = {
-            id: expense.id,
-            name: expense.name || '',
-            price: Number(expense.price || 0),
-            quantity: Number(expense.quantity || 1),
-            buyerUsername: (expense.buyer && expense.buyer.username) ? expense.buyer.username : (expense.buyer || ''),
-            url: expense.url || ''
-        };
+            this.editExpenseData = {
+                id: expense.id,
+                name: expense.name || '',
+                price: Number(expense.price || 0),
+                quantity: Number(expense.quantity || 1),
+                buyerUsername: (expense.buyer && expense.buyer.username) ? expense.buyer.username : (expense.buyer || ''),
+                url: expense.url || ''
+            };
 
-        this.showEditExpenseModal = true;
+            this.showEditExpenseModal = true;
         },
 
         closeEditExpense() {
-        this.showEditExpenseModal = false;
-        this.selectedExpense = null;
+            this.showEditExpenseModal = false;
+            this.selectedExpense = null;
         },
 
         async saveEditExpense() {
-        const e = this.editExpenseData;
-        if (!e.id) return;
+            const e = this.editExpenseData;
+            if (!e.id) return;
 
-        if (!e.name || e.name.trim().length === 0) {
-            alert("Description is required.");
-            return;
-        }
+            if (!e.name || e.name.trim().length === 0) {
+                alert("Description is required.");
+                return;
+            }
 
-        const updates = {
-            name: e.name.trim(),
-            price: Number(e.price || 0),
-            quantity: Number(e.quantity || 1),
-            url: e.url ? e.url.trim() : null
-        };
+            const updates = {
+                name: e.name.trim(),
+                price: Number(e.price || 0),
+                quantity: Number(e.quantity || 1),
+                url: e.url ? e.url.trim() : null
+            };
 
-        if (e.buyerUsername && e.buyerUsername.trim()) {
-            const allMembers = [...(this.activeGroup.admins || []), ...(this.activeGroup.users || [])];
-            const buyerObj = allMembers.find(m => m.username === e.buyerUsername);
-            updates.buyer = buyerObj ? { id: buyerObj.id, username: buyerObj.username } : { username: e.buyerUsername };
-        } else {
-            updates.buyer = null;
-        }
+            if (e.buyerUsername && e.buyerUsername.trim()) {
+                const allMembers = [...(this.activeGroup.admins || []), ...(this.activeGroup.users || [])];
+                const buyerObj = allMembers.find(m => m.username === e.buyerUsername);
+                updates.buyer = buyerObj ? { id: buyerObj.id, username: buyerObj.username } : { username: e.buyerUsername };
+            } else {
+                updates.buyer = null;
+            }
 
-        await this.updateExpense(e.id, updates);
-        this.showEditExpenseModal = false;
+            await this.updateExpense(e.id, updates);
+            this.showEditExpenseModal = false;
         },
 
 
@@ -912,10 +942,10 @@ var app = new Vue({
                 const response = await fetch('/friend/request', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
+                    body: JSON.stringify({
                         fromId: this.userId,
                         fromUsername: this.inputUsername,
-                        toUsername: this.searchUsername 
+                        toUsername: this.searchUsername
                     })
                 });
                 const data = await response.json();
@@ -932,10 +962,10 @@ var app = new Vue({
                 const response = await fetch('/friend/respond', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
+                    body: JSON.stringify({
                         userId: this.userId,
                         friendUsername: friendUsername,
-                        accepted: accepted 
+                        accepted: accepted
                     })
                 });
                 const data = await response.json();
@@ -945,7 +975,7 @@ var app = new Vue({
                         this.friends.push(friendUsername);
                     }
                     if (this.searchUsername === friendUsername) {
-                        this.fetchUserProfile(this.searchUserId); 
+                        this.fetchUserProfile(this.searchUserId);
                     }
                 }
             } catch (e) { console.error(e); }
@@ -957,9 +987,9 @@ var app = new Vue({
                 const response = await fetch('/friend/remove', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
+                    body: JSON.stringify({
                         userId: this.userId,
-                        friendUsername: this.searchUsername 
+                        friendUsername: this.searchUsername
                     })
                 });
                 const data = await response.json();
@@ -988,11 +1018,11 @@ var app = new Vue({
             try {
                 const response = await fetch(`/user/search?q=${encodeURIComponent(this.memberSearchQuery)}`);
                 const data = await response.json();
-                
+
                 // Filter out people already selected in ANY list
                 const allSelectedIds = [
-                    ...this.selectedAdmins, 
-                    ...this.selectedUsers, 
+                    ...this.selectedAdmins,
+                    ...this.selectedUsers,
                     ...this.selectedGuests
                 ].map(u => u.id);
 
@@ -1008,7 +1038,7 @@ var app = new Vue({
             if (role === 'admins') this.selectedAdmins.push(user);
             if (role === 'users') this.selectedUsers.push(user);
             if (role === 'guests') this.selectedGuests.push(user);
-            
+
             this.memberSearchQuery = '';
             this.memberSearchResults = [];
         },
@@ -1048,7 +1078,7 @@ var app = new Vue({
                     body: JSON.stringify(payload)
                 });
                 const data = await response.json();
-                
+
                 if (data.result) {
                     this.showCreateGroupModal = false;
                     this.fetchMyGroups();
@@ -1070,7 +1100,7 @@ var app = new Vue({
             };
             this.showGroupSettingsModal = true;
         },
-    
+
         async saveGroupSettings() {
             try {
                 const response = await fetch('/group/update-settings', {
@@ -1091,7 +1121,7 @@ var app = new Vue({
                 }
             } catch (e) { console.error(e); }
         },
-    
+
         async changeMemberRole(member, newRole) {
             if (!confirm(`Change ${member.username}'s role to ${newRole}?`)) return;
             try {
@@ -1113,7 +1143,7 @@ var app = new Vue({
                 }
             } catch (e) { console.error(e); }
         },
-    
+
         async removeMember(member) {
             if (!confirm(`Remove ${member.username} from group?`)) return;
             try {
@@ -1134,7 +1164,7 @@ var app = new Vue({
                 }
             } catch (e) { console.error(e); }
         },
-    
+
         async leaveGroup() {
             if (!confirm("Are you sure you want to leave this group?")) return;
             try {
@@ -1155,7 +1185,7 @@ var app = new Vue({
                 }
             } catch (e) { console.error(e); }
         },
-    
+
         async deleteGroup() {
             if (!confirm("WARNING: This will permanently delete the group and all expenses. Continue?")) return;
             try {
@@ -1173,7 +1203,7 @@ var app = new Vue({
                 }
             } catch (e) { console.error(e); }
         },
-    
+
         async togglePurchased(item) {
             const newStatus = !item.purchased;
             try {
@@ -1188,7 +1218,7 @@ var app = new Vue({
                 });
                 const data = await response.json();
                 if (data.result) {
-                    item.purchased = newStatus; 
+                    item.purchased = newStatus;
                 }
             } catch (e) { console.error(e); }
         }

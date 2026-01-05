@@ -76,6 +76,9 @@
                             <div v-if="searchUserId == userId" class="action-group">
                                 <button class="btn btn-primary" onclick="window.location.href='/settings'">Edit Profile</button>
                            </div>
+                           <button class="btn btn-danger" @click="saveBio" :disabled="bioSaving">
+                            Delete profile
+                            </button>
                             <span v-if="bioStatus" class="text-muted">{{ bioStatus }}</span>
                             </div>
                         </div>
