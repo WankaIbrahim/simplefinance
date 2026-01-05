@@ -112,6 +112,19 @@ var app = new Vue({
             description: '',
             budget: 0
         },
+
+        // Ai modal states
+        showAiModal: false,
+        aiLoading: false,
+        aiData: {
+            idea: '',
+            people: 5,
+            budget: 0,
+            notes: ''
+        },
+        
+        // Ai suggested items
+        newGroupItems: []
     },
     mounted() {
         if (localStorage.getItem('loggedIn') === 'true') {
@@ -1221,6 +1234,99 @@ var app = new Vue({
                     item.purchased = newStatus;
                 }
             } catch (e) { console.error(e); }
+        },
+        
+        openAiModal() {
+            this.showAiModal = true;
+            this.aiData = { idea: '', people: 5, budget: 100, notes: '' };
+        },
+
+        async generateGroup() {
+            if (!this.aiData.idea) {
+                alert("Please give me a general idea!");
+                return;
+            }
+            
+            this.aiLoading = true;
+            try {
+                const response = await fetch('/group/ai-suggest', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(this.aiData)
+                });
+                const data = await response.json();
+                
+                if (data.result && data.items) {
+                    this.showAiModal = false;
+                    
+                    this.openCreateGroupModal();
+                    
+                    this.newGroup.name = this.aiData.idea + " Group";
+                    this.newGroup.description = this.aiData.idea;
+                    this.newGroup.budget = this.aiData.budget;
+                    this.newGroupItems = data.items;
+                    
+                } else {
+                    alert("AI could not generate items: " + (data.msg || "Unknown error"));
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Connection failed");
+            } finally {
+                this.aiLoading = false;
+            }
+        },
+
+        openCreateGroupModal() {
+            this.showCreateGroupModal = true;
+            this.newGroup = { name: '', description: '', budget: 0 };
+            this.selectedAdmins = [{ id: this.userId, username: this.inputUsername }];
+            this.selectedUsers = [];
+            this.selectedGuests = [];
+            this.newGroupItems = [];
+            this.memberSearchQuery = '';
+            this.memberSearchResults = [];
+        },
+
+        async createGroup() {
+            if (!this.newGroup.name) {
+                alert("Please enter a group name.");
+                return;
+            }
+
+            const payload = {
+                name: this.newGroup.name,
+                description: this.newGroup.description,
+                budget: parseFloat(this.newGroup.budget),
+                admins: this.selectedAdmins,
+                users: this.selectedUsers,
+                guests: this.selectedGuests,
+                items: this.newGroupItems
+            };
+
+             try {
+                const response = await fetch('/group/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                
+                if (data.result) {
+                    this.showCreateGroupModal = false;
+                    this.fetchMyGroups(); 
+                    alert("Group created successfully!");
+                } else {
+                    alert("Error: " + data.msg);
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Failed to create group.");
+            }
+        },
+        
+        removeNewItem(index) {
+            this.newGroupItems.splice(index, 1);
         }
 
     }

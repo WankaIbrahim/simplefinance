@@ -71,6 +71,21 @@
                         </div>
 
                         <p>Hello {{inputUsername}}, ready to make budgets?</p>
+        
+                        <div v-if="newGroupItems.length > 0" class="suggested-items-section">
+                                <h3>Suggested Items</h3>
+                                <p class="text-muted" style="font-size: 0.85rem;">The AI found these items for you. Remove any you don't need.</p>
+                                
+                                <div class="items-list-preview">
+                                    <div v-for="(item, idx) in newGroupItems" :key="idx" class="preview-item">
+                                        <div class="item-info">
+                                            <strong>{{ item.name }}</strong>
+                                            <span class="text-muted">x{{ item.quantity }} (£{{ item.price }})</span>
+                                        </div>
+                                        <span class="remove" @click="removeNewItem(idx)">&times;</span>
+                                    </div>
+                                </div>
+                            </div>
                         <hr>
                         <div class="spending-groups" style="display:grid">
                             <div class="personal-groups">
@@ -91,6 +106,55 @@
                                             <p>Create a new group!</p>
                                         </div>
                                         <div class="plus-icon"> + </div>
+                                    </div>
+                                    <div class="element ai-element" @click="openAiModal">
+                                        <div style="text-align: center;">
+                                            <p>AI Sloppy Helper</p>
+                                        </div>
+                                        <div class="plus-icon" style="border-color: var(--accent);">AI</div>
+                                    </div>
+                                    
+                                    
+                                    <div class="modal-overlay" v-if="showAiModal" @mousedown.self="showAiModal = false" style="background: rgb(184, 222, 255)">
+                                        <div class="modal-card">
+                                            <div class="modal-header">
+                                                <h2>AI Sloppy</h2>
+                                                <button class="close-btn" @click="showAiModal = false">&times;</button>
+                                            </div>
+                                            
+                                            <div class="modal-body" v-if="!aiLoading">
+                                                <div class="form-group">
+                                                    <label>What is the event? (General Idea)</label>
+                                                    <input type="text" v-model="aiData.idea" placeholder="e.g. Weekend Camping Trip">
+                                                </div>
+                                                
+                                                <div class="form-row">
+                                                    <div class="form-group">
+                                                        <label>People Count (Estimate)</label>
+                                                        <input type="number" v-model="aiData.people" min="1">
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label>Rough Budget (£)</label>
+                                                        <input type="number" v-model="aiData.budget" min="0">
+                                                    </div>
+                                                </div>
+                                    
+                                                <div class="form-group">
+                                                    <label>Additional Notes (Dietary, Preferences, etc.)</label>
+                                                    <textarea v-model="aiData.notes" rows="3" placeholder="e.g. Vegetarian food only, we need tents..."></textarea>
+                                                </div>
+                                            </div>
+                                    
+                                            <div class="modal-body" v-else style="text-align: center; padding: 40px;">
+                                                <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif" style="width: 50px;">
+                                                <p>Thinking...</p>
+                                            </div>
+                                    
+                                            <div class="modal-footer" v-if="!aiLoading">
+                                                <button class="btn btn-secondary" @click="showAiModal = false">Cancel</button>
+                                                <button class="btn btn-primary" @click="generateGroup">Generate ✨</button>
+                                            </div>
+                                        </div>
                                     </div>
 
 

@@ -217,6 +217,11 @@ app.post('/group/delete', async (req, res) => {
   res.json(result);
 });
 
+app.post('/group/ai-suggest', async (req, res) => {
+  const { idea, people, budget, notes } = req.body;
+  const result = await azureModel.getAiSuggestions(idea, people, budget, notes);
+  res.json(result);
+});
 
 async function callAzureAPI(endpoint, method, body = null) {
   const url = `${BACKEND_ENDPOINT}${endpoint}`;

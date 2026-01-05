@@ -272,6 +272,22 @@ const azureModel = {
             return { result: false, msg: "Failed to delete group" };
         }
     },
+    getAiSuggestions: async (idea, people, budget, notes) => {
+        try {
+            const response = await axios.post(`${BASE_URL}/group/items/suggest`, {
+                groupId: "generating_new_group", 
+                idea: idea,
+                people: people,
+                budget: budget,
+                additional_notes: notes,
+                addToGroup: false
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Azure getAiSuggestions Error:", error.message);
+            return { result: false, msg: "AI Generation failed" };
+        }
+    },
 };
 
 module.exports = azureModel;
