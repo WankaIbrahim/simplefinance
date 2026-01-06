@@ -24,79 +24,52 @@
           </div>
 
           <section class="settings-section">
-            <div class="section-title">
-              <h2>Profile</h2>
-              <p class="muted">Basic account information.</p>
+            <!-- <div class="section-title">
+              <h2>Profile Information</h2>
+            </div> -->
+
+            <div class="settings-rows">
+              <div class="settings-row">
+                <div class="info">
+                  <label>Display Name</label>
+                  <input type="text" v-model="inputUsername">
+                </div>
+                <div class="info">
+                  <label>Email Address</label>
+                  <input type="email" v-model="inputEmail">
+                </div>
+              </div>
+
+              <div class="settings-row">
+                <div class="info">
+                  <label>Change Password</label>
+                  <input type="password" v-model="newPassword" placeholder="New Password">
+                </div>
+                <div class="info">
+                  <label>Profile Picture</label>
+                  <div style="display: flex; gap: 10px;">
+                    <input type="file" accept="image/*" @change="onPfpSelected" style="width: auto;">
+                    <button class="btn btn-sm btn-outline-primary" @click="uploadPfp"
+                      :disabled="!pfpFile">Upload</button>
+                  </div>
+                  <small v-if="pfpStatus" class="text-muted">{{ pfpStatus }}</small>
+                </div>
+              </div>
             </div>
 
-            <div class="settings-grid">
-              <div class="field">
-                <label for="name">Name</label>
-                <input id="name" type="text" placeholder="John Doe" v-model="inputUsername" />
-              </div>
+            <div class="settings-footer"
+              style="margin-top: 30px; display: flex; justify-content: space-between; align-items: center;">
+              <button class="btn btn-danger" @click="deleteAccount">Delete Account</button>
 
-              <div class="field">
-                <label for="email">Email</label>
-                <input id="email" type="email" placeholder="you@example.com" v-model="inputEmail" />
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <span v-if="statusMessage" :style="{ color: statusColor }">{{ statusMessage }}</span>
+                <button class="btn btn-primary" @click="updateProfile">Save Settings</button>
               </div>
-
-              <div class="field">
-                <label for="email">Password</label>
-                <input id="password" type="text" placeholder="New Password" v-model="newPassword" />
-              </div>
-              <div v-if="statusMessage" class="mt-3 text-center small fw-bold" :style="{ color: statusColor }"
-                style="padding:5px;">
-                {{ statusMessage }}
-              </div>
-              <div style="margin-top:12px; display:flex; flex-direction:column; gap:8px; align-items:flex-start;">
-                <input type="file" accept="image/*" @change="onPfpSelected" />
-                <button class="btn btn-outline-primary" @click="uploadPfp" :disabled="!pfpFile">
-                    Update user PFP
-                </button>
-                <p v-if="pfpStatus" class="text-muted" style="margin:0;">{{ pfpStatus }}</p>
-            </div>
-              <button class="btn btn-secondary" @click="updateProfile">
-                Change details
-              </button>
             </div>
           </section>
-
-
-          <!-- <hr class="divider" /> -->
-          <!-- Commenting this because we are not using it -->
-          <!-- <section class="settings-section">
-            <div class="section-title">
-              <h2>Preferences</h2>
-              <p class="muted">Customize your experience.</p>
-            </div>
-
-            <div class="settings-grid">
-              <div class="field toggle">
-                <label>
-                  <input type="checkbox" />
-                  <span>Enable notifications</span>
-                </label>
-              </div>
-
-              <div class="field toggle">
-                <label>
-                  <input type="checkbox" />
-                  <span>Dark mode</span>
-                </label>
-              </div>
-            </div>
-          </section> -->
-
-          <div class="settings-actions">
-            <button class="btn btn-primary">
-              Save changes
-            </button>
-            <button class="btn btn-danger">
-              Delete account
-            </button>
-          </div>
         </div>
-      </main>
+  </div>
+  </main>
   </div>
   <%- include('footer') %>
 </body>

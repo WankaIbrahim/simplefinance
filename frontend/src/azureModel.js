@@ -258,6 +258,28 @@ const azureModel = {
             return { result: false, msg: "AI Generation failed" };
         }
     },
+
+    deleteUser: async (userId) => {
+        try {
+            const response = await axios.post(`${BASE_URL}/user/delete`, { userId });
+            return response.data;
+        } catch (error) {
+            console.error("Azure deleteUser Error:", error.message);
+            return { result: false, msg: "Failed to delete user" };
+        }
+    },
+
+    addMemberToGroup: async (groupId, user, role) => {
+        try {
+            const response = await axios.post(`${BASE_URL}/group/user/add`, {
+                groupId, user, role
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Azure addMemberToGroup Error:", error.message);
+            return { result: false, msg: "Failed to add member" };
+        }
+    },
 };
 
 module.exports = azureModel;

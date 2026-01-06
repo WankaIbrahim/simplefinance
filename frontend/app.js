@@ -168,6 +168,18 @@ app.post('/friend/remove', async (req, res) => {
   res.json(result);
 });
 
+app.post('/user/delete', async (req, res) => {
+  const { userId } = req.body;
+  const result = await azureModel.deleteUser(userId);
+  res.json(result);
+});
+
+app.post('/group/user/add', async (req, res) => {
+  const { groupId, user, role } = req.body;
+  const result = await azureModel.addMemberToGroup(groupId, user, role);
+  res.json(result);
+});
+
 app.post('/upload-pfp', uploadPfp.single('pfp'), async (req, res) => {
   try {
     if (!req.file) {

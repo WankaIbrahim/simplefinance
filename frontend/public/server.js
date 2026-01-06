@@ -124,7 +124,25 @@ var app = new Vue({
         },
         
         // Ai suggested items
-        newGroupItems: []
+        newGroupItems: [],
+
+        headerSearchQuery: '',
+        headerSearchResults: [],
+        showHeaderSearch: false,
+
+        // Invite Modal Data
+        inviteSearchQuery: '',
+        inviteSearchResults: [],
+        inviteRole: 'users',
+
+        // AI Group Modal Data
+        aiGroupIdea: '',
+        aiGroupPeople: 5,
+        aiGroupBudget: 100,
+        aiGroupNotes: '',
+        aiLoading: false,
+        showAiGroupModal: false,
+
     },
     mounted() {
         if (localStorage.getItem('loggedIn') === 'true') {
@@ -228,9 +246,6 @@ var app = new Vue({
         isCurrentUserInGroup() {
             return this.isCurrentUserAdmin || this.isCurrentUserMember || this.isCurrentUserGuest;
         },
-        // currentPath() {
-        // return window.location.pathname;
-        // }
         onlineFriends() {
             return this.friends;
         },
@@ -340,7 +355,6 @@ var app = new Vue({
                 if (data.result) {
                     await this.fetchGroupDetails(this.activeGroup.groupId);
 
-                    // Clear form
                     this.item = '';
                     this.quantity = 1;
                     this.payer = '';
@@ -424,8 +438,14 @@ var app = new Vue({
                     body: JSON.stringify({ groupId: id })
                 });
                 const data = await response.json();
-
+        
                 if (data.result && data.group) {
+                    if (data.group.items) {
+                        data.group.items.forEach(item => {
+                            item.showActions = false; 
+                        });
+                    }
+        
                     this.activeGroup = data.group;
                     this.groupNotFound = false;
                 } else {
@@ -961,8 +981,14 @@ var app = new Vue({
             }
         },
         toggleActionMenu(expense) {
-            (this.activeGroup?.items || []).forEach(i => i.showActions = false);
-            expense.showActions = !expense.showActions;
+            const wasOpen = expense.showActions;
+        
+            if (this.activeGroup && this.activeGroup.items) {
+                this.activeGroup.items.forEach(i => i.showActions = false);
+            }
+            if (!wasOpen) {
+                expense.showActions = true;
+            }
         },
 
         closeAllActionMenus() {
@@ -1446,7 +1472,142 @@ var app = new Vue({
         
         removeNewItem(index) {
             this.newGroupItems.splice(index, 1);
-        }
+        },
+        async deleteAccount() {
+            if (!confirm("Are you sure you want to delete your account?")) return;
+            if (!confirm("This action is PERMANENT and cannot be undone. Are you sure?")) return;
+
+            try {
+                const response = await fetch('/user/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: this.userId })
+                });
+                const data = await response.json();
+                if (data.result) {
+                    alert("Account deleted.");
+                    this.logout();
+                } else {
+                    alert("Failed to delete: " + data.msg);
+                }
+            } catch (e) { console.error(e); }
+        },
+
+        // --- 2. HEADER SEARCH ---
+        async handleHeaderSearch() {
+            if (this.headerSearchQuery.length < 2) {
+                this.headerSearchResults = [];
+                return;
+            }
+            
+            this.showHeaderSearch = true;
+            this.headerSearchResults = [];
+
+            // Search Groups (Local Filter)
+            const groupMatches = this.groups.filter(g => g.name.toLowerCase().includes(this.headerSearchQuery.toLowerCase()));
+            groupMatches.forEach(g => {
+                this.headerSearchResults.push({ type: 'group', name: g.name, id: g.id, sub: 'Group' });
+            });
+
+            // Search Users (Remote)
+            try {
+                const response = await fetch(`/user/search?q=${this.headerSearchQuery}`);
+                const data = await response.json();
+                if (data.users) {
+                    data.users.forEach(u => {
+                        this.headerSearchResults.push({ type: 'user', name: u.username, id: u.id, sub: u.email });
+                    });
+                }
+            } catch (e) { console.error(e); }
+        },
+
+        goToSearchResult(result) {
+            this.headerSearchQuery = '';
+            this.showHeaderSearch = false;
+            if (result.type === 'group') window.location.href = `/group-view?groupId=${result.id}`;
+            if (result.type === 'user') window.location.href = `/profile?userId=${result.id}`;
+        },
+
+        // --- 3. INVITE MEMBER (Search & Add) ---
+        async searchInviteUsers() {
+             if (this.inviteSearchQuery.length < 2) {
+                this.inviteSearchResults = [];
+                return;
+            }
+            try {
+                const response = await fetch(`/user/search?q=${this.inviteSearchQuery}`);
+                const data = await response.json();
+                // Filter out existing members
+                const existingIds = [
+                    ...(this.activeGroup.admins||[]), 
+                    ...(this.activeGroup.users||[]), 
+                    ...(this.activeGroup.guests||[])
+                ].map(m => m.id);
+                
+                this.inviteSearchResults = (data.users || []).filter(u => !existingIds.includes(u.id));
+            } catch (e) { console.error(e); }
+        },
+
+        async inviteUser(user) {
+            try {
+                const response = await fetch('/group/member/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        groupId: this.activeGroup.groupId,
+                        user: { id: user.id, username: user.username },
+                        role: this.inviteRole
+                    })
+                });
+                const data = await response.json();
+                if (data.result) {
+                    this.fetchGroupDetails(this.activeGroup.groupId);
+                    this.inviteSearchQuery = ''; // Reset
+                    this.inviteSearchResults = [];
+                    alert(`${user.username} added!`);
+                } else {
+                    alert(data.msg);
+                }
+            } catch (e) { console.error(e); }
+        },
+
+        // --- 4. AI SUGGESTIONS IN GROUP ---
+        async getAiItemsForGroup() {
+            this.aiLoading = true;
+            try {
+                
+                const response = await fetch('/group/items/suggest', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        idea: this.aiGroupIdea,
+                        people: this.aiGroupPeople,
+                        budget: this.aiGroupBudget,
+                        notes: this.aiGroupNotes,
+                        groupId: this.activeGroup.groupId,
+                        addToGroup: true 
+                    })
+                });
+                const data = await response.json();
+                
+                if (data.result) {
+                    if (data.added) {
+                        this.fetchGroupDetails(this.activeGroup.groupId);
+                    } else {
+                        
+                        for (let item of data.items) {
+                           await fetch('/add-item', {
+                               method: 'POST', 
+                               headers: {'Content-Type': 'application/json'},
+                               body: JSON.stringify({ groupId: this.activeGroup.groupId, item: item })
+                           });
+                        }
+                        this.fetchGroupDetails(this.activeGroup.groupId);
+                    }
+                    this.showAiGroupModal = false;
+                }
+            } catch (e) { console.error(e); } finally { this.aiLoading = false; }
+        },
 
     }
 });

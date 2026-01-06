@@ -1,12 +1,42 @@
+/* Modern Footer Styles */
+
 footer {
-    color: rgb(134, 134, 134);
-    display: block;
-    
-    padding: 1rem;
+    background: linear-gradient(135deg, var(--bg-header) 0%, #0f1419 100%);
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
     text-align: center;
     width: 100%;
-    height:100px;
-    min-height: 50px;
-    spacing: 10px;
-    border-top: rgb(134, 134, 134) 1px solid;
+    min-height: 80px;
+    border-top: 2px solid var(--accent);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+    margin-top: auto;
+}
+
+footer p {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    color: var(--text-light);
+    transition: color var(--transition-fast);
+}
+
+footer p:hover {
+    color: var(--accent);
+}
+
+@keyframes footerGlow {
+    0%, 100% {
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+    }
+    50% {
+        box-shadow: 0 -4px 25px var(--accent-glow);
+    }
+}
+
+footer {
+    animation: footerGlow 3s ease-in-out infinite;
 }

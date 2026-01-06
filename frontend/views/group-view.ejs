@@ -38,7 +38,7 @@
                     </div>
                     <div class="group-header">
                         <h1>{{activeGroup.name}}</h1>
-                        <p class="description" style="color:black">{{ activeGroup.description || "No description" }}</p>
+                        <p class="description">{{ activeGroup.description || "No description" }}</p>
                     </div>
 
                     <div v-if="isCurrentUserAdmin" class="admin-toolbar card">
@@ -166,36 +166,36 @@
                                     <td v-if="expense.url">
                                         <a :href="expense.url" target="_blank">Website</a>
                                     </td>
-                                    <td v-else>No link</td>
+                                    <td v-else>-</td>
                                     <td class="price">£{{ (expense.price * expense.quantity).toFixed(2) }}</td>
                                     <td>{{ expense.voted ? expense.voted.length : 0 }}</td>
                                     <td>
-                                        <button @click="upvote(expense)" class="btn-icon upvote"
-                                            v-if="!expense.voted || !expense.voted.includes(inputUsername)">
-                                            ▲
-                                        </button>
-                                        <button @click="downvote(expense)" class="btn-icon downvote" v-else>
-                                            ▼
-                                        </button>
+                                        <div style="display: flex; gap: 5px;">
+                                            <button @click="upvote(expense)" class="btn-icon upvote"
+                                                title="Upvote">▲</button>
+                                            <button @click="downvote(expense)" class="btn-icon downvote"
+                                                title="Downvote">▼</button>
+                                        </div>
 
-                                        <div style="margin-top: 10px;">
-                                            <label style="display:flex; align-items:center; gap:10px; margin:6px 0;">
-                                                <input type="checkbox" :checked="expense.priority"
-                                                    @change="prioritiseExpense(expense)">
+                                        <div style="margin-top: 5px;">
+                                            <button @click="toggleActionMenu(expense)" class="btn-xs"
+                                                style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size: 0.8rem;">
+                                                More...
+                                            </button>
 
-                                                Prioritise items for purchasing
-                                            </label>
-
-                                            <label style="display:flex; align-items:center; gap:10px; margin:6px 0;">
-                                                <input type="radio" @click="confirmRemoveExpense(expense)">
-                                                Remove item from list
-                                            </label>
-
-                                            <label style="display:flex; align-items:center; gap:10px; margin:6px 0;">
-                                                <input type="radio"
-                                                    @change="openEditExpense(expense); $event.target.checked = false">
-                                                Update item details
-                                            </label>
+                                            <div v-if="expense.showActions"
+                                                style="position: absolute; background: var(--bg-card); border: 1px solid var(--border); padding: 10px; border-radius: 8px; z-index: 10; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                                                <label style="display:block; margin-bottom:8px; cursor:pointer;">
+                                                    <input type="checkbox" :checked="expense.priority"
+                                                        @change="prioritiseExpense(expense)"> Prioritize
+                                                </label>
+                                                <div style="height: 1px; background: var(--border); margin: 5px 0;">
+                                                </div>
+                                                <button @click="openEditExpense(expense)"
+                                                    style="display:block; width:100%; text-align:left; background:none; border:none; color: var(--text-main); padding: 5px; cursor: pointer;">Edit</button>
+                                                <button @click="confirmRemoveExpense(expense)"
+                                                    style="display:block; width:100%; text-align:left; background:none; border:none; color: var(--text-danger); padding: 5px; cursor: pointer;">Delete</button>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -207,9 +207,63 @@
                             </tbody>
                         </table>
 
-                        <button class="btn-add-row" @click="showExpenseModal = true">
-                            + Add New Expense
+                        <button class="btn-add-row" @click="showExpenseModal = true">+ Add New Expense</button>
+                        <button class="btn-add-row"
+                            style="margin-top: 10px; background: linear-gradient(45deg, #FFD700, #ffecb3); color: black;"
+                            @click="showAiGroupModal = true">
+                            ✨ AI Suggest Items
                         </button>
+
+                        <div class="modal-overlay" v-if="showInviteModal" @click.self="closeInviteModal">
+                            <div class="modal-card">
+                                <div class="modal-header">
+                                    <h2>Invite Members</h2>
+                                    <button class="close-btn" @click="closeInviteModal">&times;</button>
+                                </div>
+                                <div class="modal-body">
+                                    <input type="text" v-model="inviteSearchQuery" @input="searchInviteUsers"
+                                        placeholder="Search username..." style="margin-bottom: 15px;">
+
+                                    <div class="invite-results" style="max-height: 200px; overflow-y: auto;">
+                                        <div v-for="u in inviteSearchResults" :key="u.id"
+                                            style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee;">
+                                            <span>{{ u.username }}</span>
+                                            <div style="display: flex; gap: 5px;">
+                                                <select v-model="inviteRole" style="padding: 2px; margin: 0;">
+                                                    <option value="users">Member</option>
+                                                    <option value="admins">Admin</option>
+                                                    <option value="guests">Guest</option>
+                                                </select>
+                                                <button class="btn btn-sm btn-success"
+                                                    @click="inviteUser(u)">Add</button>
+                                            </div>
+                                        </div>
+                                        <p v-if="inviteSearchQuery.length > 2 && inviteSearchResults.length === 0"
+                                            class="text-muted">No users found.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-overlay" v-if="showAiGroupModal" @click.self="showAiGroupModal = false">
+                            <div class="modal-card">
+                                <h2>AI Item Assistant</h2>
+                                <div v-if="!aiLoading">
+                                    <input type="text" v-model="aiGroupIdea"
+                                        placeholder="What do you need items for? (e.g. BBQ)">
+                                    <div class="form-row">
+                                        <input type="number" v-model="aiGroupPeople" placeholder="People">
+                                        <input type="number" v-model="aiGroupBudget" placeholder="Budget">
+                                    </div>
+                                    <textarea v-model="aiGroupNotes" placeholder="Notes..."></textarea>
+                                    <button class="btn btn-primary" style="width: 100%; margin-top: 10px;"
+                                        @click="getAiItemsForGroup">Generate</button>
+                                </div>
+                                <div v-else style="text-align: center; padding: 20px;">
+                                    <p>Generating...</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </main>
 

@@ -42,16 +42,16 @@
 
                     <div class="stats-row">
                         <div class="stat-item">
-                            <span class="stat-value">3</span>
-                            <span class="stat-label" style="color: black">Friends</span>
+                            <span class="stat-value">{{ friends ? friends.length : 0 }}</span>
+                            <span class="stat-label">Friends</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-value">5</span>
-                            <span class="stat-label" style="color: black">Groups</span>
+                            <span class="stat-value">{{ (groups || []).length }}</span>
+                            <span class="stat-label">Groups</span>
                         </div>
                         <div class="stat-item">
                             <span class="stat-value text-success">Online</span>
-                            <span class="stat-label" style="color: black">Status</span>
+                            <span class="stat-label">Status</span>
                         </div>
                     </div>
                     <div class="card" style="margin-top: 16px;">
