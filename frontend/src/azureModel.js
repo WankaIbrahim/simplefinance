@@ -39,6 +39,19 @@ const azureModel = {
         }
     },
 
+    updateUser: async (userId, updates) => {
+        try {
+            const response = await axios.post(createUrl("/user/update"), {
+                userId: userId,
+                ...updates
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Azure updateUser Error:", error.message);
+            return { result: false, msg: "Failed to update user" };
+        }
+    },
+
     getGroupsByAdmin: async (username) => {
         try {
             return (await axios.get(createUrl("/group/list/admin"), { params: { username } })).data;
@@ -194,9 +207,9 @@ const azureModel = {
             const requests = [
                 axios.post(createUrl("/group/name/set"), { groupId, name }),
                 axios.post(createUrl("/group/description/set"), { groupId, description }),
-                axios.post(createUrl("/group/budget/set"), { groupId, budget: parseFloat(budget) }) 
+                axios.post(createUrl("/group/budget/set"), { groupId, budget: parseFloat(budget) })
             ];
-            
+
             await Promise.all(requests);
             return { result: true };
         } catch (error) {
@@ -245,7 +258,7 @@ const azureModel = {
     getAiSuggestions: async (idea, people, budget, notes) => {
         try {
             const response = await axios.post(createUrl("/group/items/suggest"), {
-                groupId: "generating_new_group", 
+                groupId: "generating_new_group",
                 idea: idea,
                 people: people,
                 budget: budget,

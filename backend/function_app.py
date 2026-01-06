@@ -1042,71 +1042,69 @@ def remove_friend(req: func.HttpRequest) -> func.HttpResponse:
     except Exception as e:
         return func.HttpResponse(json.dumps({"result": False, "msg": str(e)}), status_code=400, mimetype="application/json")
 
+#
+
 @app.route(route="user/update", methods=[func.HttpMethod.POST], auth_level=func.AuthLevel.FUNCTION)
 def update_user(req: func.HttpRequest) -> func.HttpResponse:
     try:
         data = req.get_json()
-        logging.info(f"Request to update user: {data}")
-
         user_id = data.get("userId")
+        
         if not user_id:
-            return func.HttpResponse(
-                json.dumps({"result": False, "msg": "userId is required"}),
-                status_code=400,
-                mimetype="application/json"
-            )
+             return func.HttpResponse(json.dumps({"result": False, "msg": "Missing UserId"}), status_code=400)
 
+        # 1. Fetch Existing User
         items = list(UserContainerProxy.query_items(
-            query="SELECT TOP 1 * FROM c WHERE c.id = @id",
+            query="SELECT * FROM c WHERE c.id = @id",
             parameters=[{"name": "@id", "value": user_id}],
             enable_cross_partition_query=True
         ))
-
+        
         if not items:
-            return func.HttpResponse(
-                json.dumps({"result": False, "msg": "User does not exist"}),
-                status_code=404,
-                mimetype="application/json"
-            )
-
+            return func.HttpResponse(json.dumps({"result": False, "msg": "User not found"}), status_code=404)
+        
         user_doc = items[0]
-        old_username = user_doc.get("username")
-
-        if "password" in data and data["password"]:
-            user_doc["password"] = data["password"]
-
-        if "pfpUrl" in data:
+        old_username = user_doc["username"]
+        
+        # 2. Update Simple Fields
+        if "email" in data and data["email"]:
+            user_doc["email"] = data["email"]
+            
+        if "bio" in data and data["bio"]:
+            user_doc["bio"] = data["bio"]
+            
+        if "pfpUrl" in data and data["pfpUrl"]:
             user_doc["pfpUrl"] = data["pfpUrl"]
 
-        if "email" in data:
-            user_doc["email"] = data["email"]
+        # 3. Handle Password Hashing
+        if "password" in data and data["password"]:
+            user_doc["password"] = hash_password(data["password"])
 
-        if "bio" in data:
-            user_doc["bio"] = data["bio"]
-
+        # 4. Handle Username Change (Complex because it is Partition Key)
         new_username = data.get("username")
-        if new_username:
+        if new_username: 
             new_username = new_username.strip()
 
         if new_username and new_username != old_username:
+            # A. Check if new username is taken
             existing = list(UserContainerProxy.query_items(
                 query="SELECT TOP 1 * FROM c WHERE c.username = @username",
                 parameters=[{"name": "@username", "value": new_username}],
                 enable_cross_partition_query=True
             ))
             if existing:
-                return func.HttpResponse(
-                    json.dumps({"result": False, "msg": "Username already taken"}),
-                    status_code=409,
-                    mimetype="application/json"
-                )
+                 return func.HttpResponse(json.dumps({"result": False, "msg": "Username already taken"}), status_code=409)
+
+            # B. Create New User Doc & Delete Old
             new_doc = dict(user_doc)
             new_doc["username"] = new_username
-
+            
+            # Create new item (New Partition Key)
             UserContainerProxy.create_item(body=new_doc)
-
+            # Delete old item (Old Partition Key)
             UserContainerProxy.delete_item(item=user_doc["id"], partition_key=old_username)
 
+            # C. Update References in Groups
             groups = list(GroupContainerProxy.query_items(
                 query="""
                 SELECT * FROM c
@@ -1119,6 +1117,7 @@ def update_user(req: func.HttpRequest) -> func.HttpResponse:
             ))
 
             def replace_username(arr):
+                # Helper to swap username in member lists
                 out = []
                 for u in (arr or []):
                     if isinstance(u, dict) and u.get("id") == user_id:
@@ -1131,28 +1130,28 @@ def update_user(req: func.HttpRequest) -> func.HttpResponse:
                 g["admins"] = replace_username(g.get("admins"))
                 g["users"]  = replace_username(g.get("users"))
                 g["guests"] = replace_username(g.get("guests"))
+                # Also check items buyer references if necessary, usually stored as object
+                # For now, updating membership lists is the critical part.
                 GroupContainerProxy.replace_item(item=g["id"], body=g)
 
             return func.HttpResponse(
-                json.dumps({"result": True, "msg": "OK", "username": new_username}),
-                status_code=200,
+                json.dumps({"result": True, "msg": "User updated", "username": new_username}), 
+                status_code=200, 
                 mimetype="application/json"
             )
 
+        # 5. Save Standard Updates (No username change)
         UserContainerProxy.replace_item(item=user_doc["id"], body=user_doc)
 
         return func.HttpResponse(
-            json.dumps({"result": True, "msg": "OK"}),
-            status_code=200,
+            json.dumps({"result": True, "msg": "User updated", "username": old_username}), 
+            status_code=200, 
             mimetype="application/json"
         )
 
     except Exception as e:
-        return func.HttpResponse(
-            json.dumps({"result": False, "msg": str(e)}),
-            status_code=400,
-            mimetype="application/json"
-        )
+        return func.HttpResponse(json.dumps({"result": False, "msg": str(e)}), status_code=500)
+
 
 @app.route(route="user/search", methods=[func.HttpMethod.GET], auth_level=func.AuthLevel.FUNCTION)
 def search_users(req: func.HttpRequest) -> func.HttpResponse:

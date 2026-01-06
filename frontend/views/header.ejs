@@ -4,36 +4,32 @@
             <a href="/display">SimpleFinance</a>
         </div>
 
-        <div v-if="loggedIn" class="header-search" style="position: relative; flex-grow: 1; max-width: 400px; margin: 0 20px;">
-            <input type="text" 
-                   v-model="headerSearchQuery" 
-                   @input="handleHeaderSearch" 
-                   placeholder="Search groups or people..."
-                   style="width: 100%; margin: 0; padding: 8px 15px; border-radius: 20px; border: 1px solid #444; background: #2c2f33; color: white;">
-            
-            <div v-if="showHeaderSearch && headerSearchResults.length > 0" 
-                 class="search-dropdown" 
-                 style="position: absolute; top: 110%; left: 0; width: 100%; background: #282b30; border: 1px solid #444; border-radius: 8px; overflow: hidden; z-index: 2000;">
-                <div v-for="res in headerSearchResults" 
-                     @click="goToSearchResult(res)"
-                     style="padding: 10px; border-bottom: 1px solid #333; cursor: pointer; display: flex; justify-content: space-between;">
+        <div v-if="loggedIn" class="header-search"
+            style="position: relative; flex-grow: 1; max-width: 400px; margin: 0 20px;">
+            <input type="text" v-model="headerSearchQuery" @input="handleHeaderSearch"
+                placeholder="Search groups or people..."
+                style="width: 100%; margin: 0; padding: 8px 15px; border-radius: 20px; border: 1px solid #444; background: #2c2f33; color: white;">
+
+            <div v-if="showHeaderSearch && headerSearchResults.length > 0" class="search-dropdown"
+                style="position: absolute; top: 110%; left: 0; width: 100%; background: #282b30; border: 1px solid #444; border-radius: 8px; overflow: hidden; z-index: 2000;">
+                <div v-for="res in headerSearchResults" @click="goToSearchResult(res)"
+                    style="padding: 10px; border-bottom: 1px solid #333; cursor: pointer; display: flex; justify-content: space-between;">
                     <span style="font-weight: bold; color: white;">{{ res.name }}</span>
                     <span style="color: #888; font-size: 0.8em;">{{ res.sub }}</span>
                 </div>
             </div>
         </div>
 
-        <button class="hamburger" @click="mobileMenuOpen = !mobileMenuOpen">
+        <button v-if="loggedIn" class="hamburger" @click="mobileMenuOpen = !mobileMenuOpen">
             ☰
         </button>
-        
+
         <div class="nav-menu" :class="{ 'open': mobileMenuOpen }">
             <template v-if="loggedIn">
-                <!-- <a href="/display" class="nav-link">Home</a> -->
                 <a href="/display" class="nav-link">Dashboard</a>
                 <a :href="'/profile?userId=' + userId" class="nav-link">My Profile</a>
                 <button @click="logout" class="nav-btn">Sign out</button>
             </template>
-            </div>
+        </div>
     </div>
 </nav>
