@@ -274,7 +274,7 @@ const azureModel = {
 
     deleteUser: async (userId) => {
         try {
-            const response = await axios.post(`${BASE_URL}/user/delete`, { userId });
+            const response = await axios.post(createUrl("/user/delete"), { userId });
             return response.data;
         } catch (error) {
             console.error("Azure deleteUser Error:", error.message);
@@ -284,7 +284,7 @@ const azureModel = {
 
     addMemberToGroup: async (groupId, user, role) => {
         try {
-            const response = await axios.post(`${BASE_URL}/group/user/add`, {
+            const response = await axios.post(createUrl("/group/user/add"), {
                 groupId: groupId,
                 user: user,
                 role: role
@@ -297,7 +297,7 @@ const azureModel = {
     },
     searchUsers: async (query) => {
         try {
-            const response = await axios.get(`${BASE_URL}/user/search`, {
+            const response = await axios.get(createUrl("/user/search"), {
                 params: { q: query }
             });
             return response.data;
