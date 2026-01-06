@@ -70,7 +70,8 @@ def example_create_group():
         "users": [],
         "admins": [{"id": "76aabf43-3a61-4772-96f4-6156df534dd8", "username": "ibrahim"}],
         "budget": 500,
-        "items": []
+        "items": [],
+        "description": 'Description adad',
     }
 
     r = requests.post(CREATE_GROUP_URL, json=payload)
@@ -186,7 +187,5 @@ def example_group_get():
 
 
 if __name__ == "__main__":
-    example_login_user()
-    example_register_user()
-    example_add_user()
+    example_create_group()
     

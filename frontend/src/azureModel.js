@@ -2,32 +2,38 @@ const axios = require('axios');
 require('dotenv').config();
 
 const BASE_URL = process.env.AZURE_FUNCTION_URL;
+const HOST_KEY = process.env.HOST_KEY;
+
+function createUrl(path) {
+    url = `${BASE_URL}${path}?code=${HOST_KEY}`
+    console.log(url)
+    return url;
+}
 
 const azureModel = {
     login: async (username, password) => {
         try {
-            const response = await axios.post(`${BASE_URL}/user/login`, {
+            const response = await axios.post(createUrl("/user/login"), {
                 username: username,
                 password: password
             });
             console.log(response.data);
             return response.data;
         } catch (error) {
-            // console.log("Azure Login Error: " + error.message);
             console.error("Azure Login Error:", error.message);
             return { result: false, msg: "Connection to backend failed - check Azure" };
         }
     },
+
     register: async (username, password) => {
         try {
-            const response = await axios.post(`${BASE_URL}/user/register`, {
+            const response = await axios.post(createUrl("/user/register"), {
                 username: username,
                 password: password
             });
             console.log(response.data);
             return response.data;
         } catch (error) {
-            // console.log("Azure Login Error: " + error.message);
             console.error("Azure Login Error:", error.message);
             return { result: false, msg: "Connection to backend failed - check Azure" };
         }
@@ -35,24 +41,25 @@ const azureModel = {
 
     getGroupsByAdmin: async (username) => {
         try {
-            return (await axios.get(`${BASE_URL}/group/list/admin`, { params: { username } })).data;
+            return (await axios.get(createUrl("/group/list/admin"), { params: { username } })).data;
         } catch (e) { return { result: false, msg: "Error fetching admin groups" }; }
     },
 
     getGroupsByMember: async (username) => {
         try {
-            return (await axios.get(`${BASE_URL}/group/list/member`, { params: { username } })).data;
+            return (await axios.get(createUrl("/group/list/member"), { params: { username } })).data;
         } catch (e) { return { result: false, msg: "Error fetching member groups" }; }
     },
 
     getGroupsByGuest: async (username) => {
         try {
-            return (await axios.get(`${BASE_URL}/group/list/guest`, { params: { username } })).data;
+            return (await axios.get(createUrl("/group/list/guest"), { params: { username } })).data;
         } catch (e) { return { result: false, msg: "Error fetching guest groups" }; }
     },
+
     getUserByName: async (username) => {
         try {
-            const response = await axios.get(`${BASE_URL}/user/get/username`, {
+            const response = await axios.get(createUrl("/user/get/username"), {
                 params: { username }
             });
             return response.data;
@@ -64,9 +71,10 @@ const azureModel = {
             return { result: false, msg: "Connection failed" };
         }
     },
+
     getGroupById: async (groupId) => {
         try {
-            const response = await axios.get(`${BASE_URL}/group/get`, {
+            const response = await axios.get(createUrl("/group/get"), {
                 params: { groupId }
             });
             return response.data;
@@ -78,7 +86,7 @@ const azureModel = {
 
     getUserById: async (userId) => {
         try {
-            const response = await axios.get(`${BASE_URL}/user/get`, {
+            const response = await axios.get(createUrl("/user/get"), {
                 params: { userId }
             });
             return response.data;
@@ -87,9 +95,10 @@ const azureModel = {
             return { result: false, msg: "User not found" };
         }
     },
+
     addItemToGroup: async (groupId, item) => {
         try {
-            const response = await axios.post(`${BASE_URL}/group/item/add`, {
+            const response = await axios.post(createUrl("/group/item/add"), {
                 groupId: groupId,
                 item: item
             });
@@ -102,7 +111,7 @@ const azureModel = {
 
     removeItemFromGroup: async (groupId, itemId) => {
         try {
-            const response = await axios.post(`${BASE_URL}/group/item/remove`, {
+            const response = await axios.post(createUrl("/group/item/remove"), {
                 groupId: groupId,
                 itemId: itemId
             });
@@ -115,7 +124,7 @@ const azureModel = {
 
     updateItem: async (groupId, itemId, updates) => {
         try {
-            const response = await axios.post(`${BASE_URL}/group/item/update`, {
+            const response = await axios.post(createUrl("/group/item/update"), {
                 groupId: groupId,
                 itemId: itemId,
                 updates: updates
@@ -129,7 +138,7 @@ const azureModel = {
 
     voteItem: async (groupId, itemId, username, action = "toggle") => {
         try {
-            const response = await axios.post(`${BASE_URL}/group/item/vote`, {
+            const response = await axios.post(createUrl("/group/item/vote"), {
                 groupId: groupId,
                 itemId: itemId,
                 username: username,
@@ -141,22 +150,10 @@ const azureModel = {
             return { result: false, msg: "Failed to vote on item" };
         }
     },
-    updateUser: async (userId, updates) => {
-        try {
-            const response = await axios.post(`${BASE_URL}/user/update`, {
-                userId: userId,
-                ...updates
-            });
-            return response.data;
-        } catch (error) {
-            console.error("Azure updateUser Error:", error.message);
-            return { result: false, msg: "Failed to update user" };
-        }
-    },
-    // friend logic
+
     sendFriendRequest: async (fromId, fromUsername, toUsername) => {
         try {
-            const response = await axios.post(`${BASE_URL}/user/friend/request`, {
+            const response = await axios.post(createUrl("/user/friend/request"), {
                 id_from_username_request: fromId,
                 from_username_request: fromUsername,
                 to_username_request: toUsername
@@ -170,7 +167,7 @@ const azureModel = {
 
     respondFriendRequest: async (userId, friendUsername, accepted) => {
         try {
-            const response = await axios.post(`${BASE_URL}/user/friend/response`, {
+            const response = await axios.post(createUrl("/user/friend/response"), {
                 userId: userId,
                 friendUsername: friendUsername,
                 accepted: accepted
@@ -182,34 +179,9 @@ const azureModel = {
         }
     },
 
-    removeFriend: async (userId, friendUsername) => {
-        try {
-            const response = await axios.post(`${BASE_URL}/user/friend/remove`, {
-                userId: userId,
-                friendUsername: friendUsername
-            });
-            return response.data;
-        } catch (error) {
-            console.error("Azure removeFriend Error:", error.message);
-            return { result: false, msg: "Failed to remove friend" };
-        }
-    },
-
-    searchUsers: async (query) => {
-        try {
-            const response = await axios.get(`${BASE_URL}/user/search`, {
-                params: { q: query }
-            });
-            return response.data;
-        } catch (error) {
-            console.error("Azure searchUsers Error:", error.message);
-            return { result: false, users: [] };
-        }
-    },
-
     createGroup: async (groupData) => {
         try {
-            const response = await axios.post(`${BASE_URL}/group/create`, groupData);
+            const response = await axios.post(createUrl("/group/create"), groupData);
             return response.data;
         } catch (error) {
             console.error("Azure createGroup Error:", error.message);
@@ -217,15 +189,12 @@ const azureModel = {
         }
     },
 
-
-
-
     updateGroupSettings: async (groupId, name, description, budget) => {
         try {
             const requests = [
-                axios.post(`${BASE_URL}/group/name/set`, { groupId, name }),
-                axios.post(`${BASE_URL}/group/description/set`, { groupId, description }),
-                axios.post(`${BASE_URL}/group/budget/set`, { groupId, budget: parseFloat(budget) }) 
+                axios.post(createUrl("/group/name/set"), { groupId, name }),
+                axios.post(createUrl("/group/description/set"), { groupId, description }),
+                axios.post(createUrl("/group/budget/set"), { groupId, budget: parseFloat(budget) }) 
             ];
             
             await Promise.all(requests);
@@ -238,7 +207,7 @@ const azureModel = {
 
     changeMemberRole: async (groupId, userId, username, role) => {
         try {
-            const response = await axios.post(`${BASE_URL}/group/user/role/change`, {
+            const response = await axios.post(createUrl("/group/user/role/change"), {
                 groupId,
                 user: { id: userId, username },
                 role
@@ -252,7 +221,7 @@ const azureModel = {
 
     removeMemberFromGroup: async (groupId, userId, username) => {
         try {
-            const response = await axios.post(`${BASE_URL}/group/user/remove`, {
+            const response = await axios.post(createUrl("/group/user/remove"), {
                 groupId,
                 user: { id: userId, username }
             });
@@ -265,16 +234,17 @@ const azureModel = {
 
     deleteGroup: async (groupId) => {
         try {
-            const response = await axios.post(`${BASE_URL}/group/delete`, { groupId });
+            const response = await axios.post(createUrl("/group/delete"), { groupId });
             return response.data;
         } catch (error) {
             console.error("Azure deleteGroup Error:", error.message);
             return { result: false, msg: "Failed to delete group" };
         }
     },
+
     getAiSuggestions: async (idea, people, budget, notes) => {
         try {
-            const response = await axios.post(`${BASE_URL}/group/items/suggest`, {
+            const response = await axios.post(createUrl("/group/items/suggest"), {
                 groupId: "generating_new_group", 
                 idea: idea,
                 people: people,

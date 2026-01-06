@@ -1,12 +1,16 @@
 # SimpleFinance
 ## COMP3207 Cloud App - Group Coursework
 
-Last update: `20/12/2025`
+Last update: `05/01/2026`
 
 File Structure:
 ```
 > backend
-// someone document the backend file structure
+-> shared_code - contains the code for the User and Group objects
+-> tests
+--> test_functions.py - contains the unit tests for the azure function app
+-> examples.py - provides example usage of the azure function app
+-> function.app - contains the main azure function app logic
 ```
 
 ```
@@ -31,7 +35,7 @@ File Structure:
 -> app.js - server setup
 ```
 
-To run the back-end server:
+To run the back-end server locally:
 ```
 pip install -r requirements.txt
 ```
@@ -41,7 +45,7 @@ func start
 ```
 
 
-To run the front-end server:
+To run the front-end server locally:
 ```
 npm install
 ```

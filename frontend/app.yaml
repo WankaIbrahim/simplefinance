@@ -14,5 +14,5 @@ resources:
   disk_size_gb: 10
 
 env_variables:
-  BACKEND: ""
-  AZURE_API_KEY: ""
+  AZURE_FUNCTION_URL: "https://simplefinance.azurewebsites.net"
+  HOST_KEY: "jHMTQt3HujrD95gb7i8X1p5ovrH-yzStfSeLDHPLMiEnAzFuy3B_jQ=="
