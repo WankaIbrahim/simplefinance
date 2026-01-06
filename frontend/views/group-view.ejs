@@ -55,36 +55,6 @@
                         </div>
                     </div>
 
-                    <div class="modal-overlay" v-if="showInviteModal" @click.self="closeInviteModal">
-                        <div class="modal-card">
-                            <div class="modal-header">
-                                <h2>Invite Members</h2>
-                                <button class="close-btn" @click="closeInviteModal">&times;</button>
-                            </div>
-                            <div class="modal-body">
-                                <input type="text" v-model="inviteSearchQuery" @input="searchInviteUsers" 
-                                       placeholder="Search by username..." class="form-control" style="margin-bottom: 15px;">
-                                
-                                <div class="invite-results" style="max-height: 200px; overflow-y: auto;">
-                                    <div v-for="u in inviteSearchResults" :key="u.id" 
-                                         style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee;">
-                                        <span style="font-weight: bold;">{{ u.username }}</span>
-                                        <div style="display: flex; gap: 5px;">
-                                            <select v-model="inviteRole" style="padding: 5px;">
-                                                <option value="users">Member</option>
-                                                <option value="admins">Admin</option>
-                                                <option value="guests">Guest</option>
-                                            </select>
-                                            <button class="btn btn-sm btn-success" @click="inviteUser(u)" :disabled="inviteSending">Add</button>
-                                        </div>
-                                    </div>
-                                    <p v-if="inviteSearchQuery.length > 1 && inviteSearchResults.length === 0" class="text-muted">No users found.</p>
-                                </div>
-                                <p v-if="inviteStatusMessage" :style="{color: inviteStatusColor, marginTop: '10px'}">{{ inviteStatusMessage }}</p>
-                            </div>
-                        </div>
-                    </div>
-
                     <div v-else class="card" style="margin-bottom: 20px;">
                         <button class="btn btn-danger" @click="leaveGroup">Leave Group</button>
                     </div>
@@ -186,7 +156,7 @@
                                             <span>{{ expense.name }}</span>
                                         </div>
                                     </td>
-                                    <td class="price">£{{ expense.price }}</td>
+                                    <td class="price">£{{ (expense.price).toFixed(2) }}</td>
                                     <td>
                                         <span v-if="expense.buyer" class="badge">{{ expense.buyer.username ||
                                             expense.buyer }}</span>
@@ -251,26 +221,73 @@
                                     <button class="close-btn" @click="closeInviteModal">&times;</button>
                                 </div>
                                 <div class="modal-body">
-                                    <input type="text" v-model="inviteSearchQuery" @input="searchInviteUsers"
-                                        placeholder="Search username..." style="margin-bottom: 15px;">
-
-                                    <div class="invite-results" style="max-height: 200px; overflow-y: auto;">
-                                        <div v-for="u in inviteSearchResults" :key="u.id"
-                                            style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee;">
-                                            <span>{{ u.username }}</span>
-                                            <div style="display: flex; gap: 5px;">
-                                                <select v-model="inviteRole" style="padding: 2px; margin: 0;">
+                                    <input 
+                                        type="text" 
+                                        v-model="inviteSearchQuery" 
+                                        @input="searchInviteUsers" 
+                                        placeholder="Search by username..." 
+                                        class="form-control" 
+                                        style="margin-bottom: 15px;"
+                                    >
+                                    
+                                    <div class="invite-results" style="max-height: 300px; overflow-y: auto;">
+                                        <div 
+                                            v-for="u in inviteSearchResults" 
+                                            :key="u.id" 
+                                            style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee;"
+                                        >
+                                            <div style="display: flex; align-items: center; gap: 10px;">
+                                                <img 
+                                                    v-if="u.pfpUrl" 
+                                                    :src="u.pfpUrl" 
+                                                    style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;"
+                                                >
+                                                <div>
+                                                    <span style="font-weight: bold;">{{ u.username }}</span>
+                                                    <div v-if="u.email" style="font-size: 0.85em; color: #666;">{{ u.email }}</div>
+                                                </div>
+                                            </div>
+                                            <div style="display: flex; gap: 5px; align-items: center;">
+                                                <select 
+                                                    v-model="inviteUserStates[u.id].role" 
+                                                    style="padding: 5px;" 
+                                                    class="form-control"
+                                                    :disabled="inviteUserStates[u.id].sending"
+                                                >
                                                     <option value="users">Member</option>
                                                     <option value="admins">Admin</option>
                                                     <option value="guests">Guest</option>
                                                 </select>
-                                                <button class="btn btn-sm btn-success"
-                                                    @click="inviteUser(u)">Add</button>
+                                                <button 
+                                                    class="btn btn-sm btn-success" 
+                                                    @click="inviteUser(u)" 
+                                                    :disabled="inviteUserStates[u.id].sending"
+                                                >
+                                                    {{ inviteUserStates[u.id].sending ? 'Adding...' : 'Add' }}
+                                                </button>
                                             </div>
                                         </div>
-                                        <p v-if="inviteSearchQuery.length > 2 && inviteSearchResults.length === 0"
-                                            class="text-muted">No users found.</p>
+                                        <p 
+                                            v-if="inviteSearchQuery.length > 1 && inviteSearchResults.length === 0" 
+                                            class="text-muted"
+                                            style="text-align: center; padding: 20px;"
+                                        >
+                                            No users found.
+                                        </p>
+                                        <p 
+                                            v-if="inviteSearchQuery.length > 0 && inviteSearchQuery.length < 2" 
+                                            class="text-muted"
+                                            style="text-align: center; padding: 20px;"
+                                        >
+                                            Type at least 2 characters to search...
+                                        </p>
                                     </div>
+                                    <p 
+                                        v-if="inviteStatusMessage" 
+                                        :style="{color: inviteStatusColor, marginTop: '10px', fontWeight: 'bold'}"
+                                    >
+                                        {{ inviteStatusMessage }}
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -340,34 +357,6 @@
             <div v-else class="app-layout" style="justify-content: center;">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif" alt="Loading"
                     style="width: 50px;">
-            </div>
-            <div class="modal-overlay" v-if="showInviteModal" @click.self="closeInviteModal">
-                <div class="modal-card" style="max-width: 520px;">
-                    <div class="modal-header">
-                        <h2>Invite Member</h2>
-                        <button class="close-btn" @click="closeInviteModal">&times;</button>
-                    </div>
-
-                    <div class="modal-body">
-                        <div class="form-group">
-                            <label>Username or Email</label>
-                            <input type="text" v-model.trim="inviteIdentifier"
-                                placeholder="e.g. husam3 or husam@email.com" @keyup.enter="sendInvite" />
-                        </div>
-
-                        <p v-if="inviteStatusMessage" class="small fw-bold" :style="{ color: inviteStatusColor }">
-                            {{ inviteStatusMessage }}
-                        </p>
-                    </div>
-
-                    <div class="modal-footer">
-                        <button class="btn btn-secondary" @click="closeInviteModal">Cancel</button>
-                        <button class="btn btn-success" :disabled="inviteSending || !inviteIdentifier"
-                            @click="sendInvite">
-                            {{ inviteSending ? "Sending..." : "Send Invite" }}
-                        </button>
-                    </div>
-                </div>
             </div>
 
             <div class="modal-overlay" v-if="showRemoveConfirm" @click.self="closeRemoveConfirm">

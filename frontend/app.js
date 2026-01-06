@@ -174,12 +174,6 @@ app.post('/user/delete', async (req, res) => {
   res.json(result);
 });
 
-app.post('/group/member/add', async (req, res) => {
-  const { groupId, user, role } = req.body;
-  const result = await azureModel.addMemberToGroup(groupId, user, role);
-  res.json(result);
-});
-
 app.post('/group/user/add', async (req, res) => {
   const { groupId, user, role } = req.body;
   const result = await azureModel.addMemberToGroup(groupId, user, role);

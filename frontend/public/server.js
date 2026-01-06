@@ -122,7 +122,7 @@ var app = new Vue({
             budget: 0,
             notes: ''
         },
-        
+
         // Ai suggested items
         newGroupItems: [],
 
@@ -133,12 +133,11 @@ var app = new Vue({
         // Invite Modal Data
         inviteSearchQuery: '',
         inviteSearchResults: [],
-        inviteRole: 'users',
         showInviteModal: false,
         inviteStatusMessage: '',
         inviteStatusColor: '',
-        inviteSending: false,
         showRemoveConfirm: false,
+        inviteUserStates: {},
 
         // AI Group Modal Data
         aiGroupIdea: '',
@@ -323,14 +322,14 @@ var app = new Vue({
 
             let buyerObj = null;
             if (this.payer) {
-                
+
                 const allMembers = [
                     ...(this.activeGroup.admins || []),
                     ...(this.activeGroup.users || []),
                     ...(this.activeGroup.guests || [])
                 ];
                 const foundUser = allMembers.find(u => u.username === this.payer);
-                
+
                 if (foundUser) {
                     buyerObj = { username: foundUser.username, id: foundUser.id };
                 }
@@ -379,11 +378,11 @@ var app = new Vue({
                 console.error('Error adding item:', error);
                 alert('Failed to add item');
                 this.item = '';
-                    this.quantity = 1;
-                    this.payer = '';
-                    this.price = 0.0;
-                    this.url = '';
-                    this.buyer = '';
+                this.quantity = 1;
+                this.payer = '';
+                this.price = 0.0;
+                this.url = '';
+                this.buyer = '';
             }
         },
         async removeExpense(itemId) {
@@ -443,14 +442,14 @@ var app = new Vue({
                     body: JSON.stringify({ groupId: id })
                 });
                 const data = await response.json();
-        
+
                 if (data.result && data.group) {
                     if (data.group.items) {
                         data.group.items.forEach(item => {
-                            item.showActions = false; 
+                            item.showActions = false;
                         });
                     }
-        
+
                     this.activeGroup = data.group;
                     this.groupNotFound = false;
                 } else {
@@ -487,18 +486,18 @@ var app = new Vue({
         async fetchUserGroupsStats(username) {
             try {
                 const [adminRes, memberRes, guestRes] = await Promise.all([
-                    fetch('/my-groups', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ username }) }),
-                    fetch('/membership-groups', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ username }) }),
+                    fetch('/my-groups', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username }) }),
+                    fetch('/membership-groups', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username }) }),
                 ]);
-                
+
                 const adminData = await adminRes.json();
                 const memberData = await memberRes.json();
-                
+
                 const totalGroups = (adminData.groups || []).length + (memberData.groups || []).length;
-                
+
                 this.$set(this, 'profileGroupCount', totalGroups);
-                
-            } catch(e) { console.error(e); }
+
+            } catch (e) { console.error(e); }
         },
 
         async saveBio() {
@@ -558,48 +557,48 @@ var app = new Vue({
             }
         },
         exportCSV() {
-        if (!this.activeGroup || !Array.isArray(this.activeGroup.items)) return;
+            if (!this.activeGroup || !Array.isArray(this.activeGroup.items)) return;
 
-        const rows = this.activeGroup.items.map(it => ({
-            Description: it.name || "",
-            Price: Number(it.price || 0),
-            Quantity: Number(it.quantity || 1),
-            Total: (Number(it.price || 0) * Number(it.quantity || 1)).toFixed(2),
-            Buyer: (it.buyer && it.buyer.username) ? it.buyer.username : (it.buyer || ""),
-            Purchased: it.purchased ? "Yes" : "No",
-            Votes: (it.voted && Array.isArray(it.voted)) ? it.voted.length : 0,
-            Prioritised: it.priority ? "Yes" : "No",
-            URL: it.url || ""
-        }));
+            const rows = this.activeGroup.items.map(it => ({
+                Description: it.name || "",
+                Price: Number(it.price || 0),
+                Quantity: Number(it.quantity || 1),
+                Total: (Number(it.price || 0) * Number(it.quantity || 1)).toFixed(2),
+                Buyer: (it.buyer && it.buyer.username) ? it.buyer.username : (it.buyer || ""),
+                Purchased: it.purchased ? "Yes" : "No",
+                Votes: (it.voted && Array.isArray(it.voted)) ? it.voted.length : 0,
+                Prioritised: it.priority ? "Yes" : "No",
+                URL: it.url || ""
+            }));
 
-        const headers = Object.keys(rows[0] || {
-            Description: "", Price: "", Quantity: "", Total: "", Buyer: "", Purchased: "", Votes: "", Prioritised: "", URL: ""
-        });
+            const headers = Object.keys(rows[0] || {
+                Description: "", Price: "", Quantity: "", Total: "", Buyer: "", Purchased: "", Votes: "", Prioritised: "", URL: ""
+            });
 
-        const escapeCSV = (v) => {
-            const s = String(v ?? "");
-            if (s.includes('"') || s.includes(",") || s.includes("\n")) {
-            return `"${s.replace(/"/g, '""')}"`;
-            }
-            return s;
-        };
+            const escapeCSV = (v) => {
+                const s = String(v ?? "");
+                if (s.includes('"') || s.includes(",") || s.includes("\n")) {
+                    return `"${s.replace(/"/g, '""')}"`;
+                }
+                return s;
+            };
 
-        const csv = [
-            headers.join(","),
-            ...rows.map(r => headers.map(h => escapeCSV(r[h])).join(","))
-        ].join("\n");
+            const csv = [
+                headers.join(","),
+                ...rows.map(r => headers.map(h => escapeCSV(r[h])).join(","))
+            ].join("\n");
 
-        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-        const filename = `${(this.activeGroup.name || "group")}-expenses.csv`;
-        this.downloadBlob(blob, filename);
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+            const filename = `${(this.activeGroup.name || "group")}-expenses.csv`;
+            this.downloadBlob(blob, filename);
         },
 
         exportExcel() {
-        if (!this.activeGroup || !Array.isArray(this.activeGroup.items)) return;
+            if (!this.activeGroup || !Array.isArray(this.activeGroup.items)) return;
 
-        const items = this.activeGroup.items;
+            const items = this.activeGroup.items;
 
-        const html = `
+            const html = `
             <html xmlns:o="urn:schemas-microsoft-com:office:office"
                 xmlns:x="urn:schemas-microsoft-com:office:excel"
                 xmlns="http://www.w3.org/TR/REC-html40">
@@ -635,12 +634,12 @@ var app = new Vue({
                 </thead>
                 <tbody>
                     ${items.map(it => {
-                    const price = Number(it.price || 0);
-                    const qty = Number(it.quantity || 1);
-                    const total = (price * qty).toFixed(2);
-                    const buyer = (it.buyer && it.buyer.username) ? it.buyer.username : (it.buyer || "");
-                    const esc = (s) => String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-                    return `
+                const price = Number(it.price || 0);
+                const qty = Number(it.quantity || 1);
+                const total = (price * qty).toFixed(2);
+                const buyer = (it.buyer && it.buyer.username) ? it.buyer.username : (it.buyer || "");
+                const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                return `
                         <tr>
                         <td>${esc(it.name || "")}</td>
                         <td>${price}</td>
@@ -653,27 +652,27 @@ var app = new Vue({
                         <td>${esc(it.url || "")}</td>
                         </tr>
                     `;
-                    }).join("")}
+            }).join("")}
                 </tbody>
                 </table>
             </body>
             </html>
         `.trim();
 
-        const blob = new Blob([html], { type: "application/vnd.ms-excel;charset=utf-8;" });
-        const filename = `${(this.activeGroup.name || "group")}-expenses.xls`;
-        this.downloadBlob(blob, filename);
+            const blob = new Blob([html], { type: "application/vnd.ms-excel;charset=utf-8;" });
+            const filename = `${(this.activeGroup.name || "group")}-expenses.xls`;
+            this.downloadBlob(blob, filename);
         },
 
         downloadBlob(blob, filename) {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
         },
 
 
@@ -705,12 +704,17 @@ var app = new Vue({
             this.inviteSearchQuery = '';
             this.inviteSearchResults = [];
             this.inviteStatusMessage = '';
-        },
-
-        closeInviteModal() {
-            this.showInviteModal = false;
+            this.inviteUserStates = {};
         },
         
+        closeInviteModal() {
+            this.showInviteModal = false;
+            this.inviteSearchQuery = '';
+            this.inviteSearchResults = [];
+            this.inviteStatusMessage = '';
+            this.inviteUserStates = {};
+        },
+
         async sendInvite() {
             if (!this.inviteIdentifier || this.inviteSending) return;
 
@@ -1004,7 +1008,7 @@ var app = new Vue({
         },
         toggleActionMenu(expense) {
             const wasOpen = expense.showActions;
-        
+
             if (this.activeGroup && this.activeGroup.items) {
                 this.activeGroup.items.forEach(i => i.showActions = false);
             }
@@ -1182,7 +1186,7 @@ var app = new Vue({
         openCreateGroupModal() {
             this.showCreateGroupModal = true;
             this.newGroup = { name: '', description: '', budget: 0 };
-            this.selectedAdmins = [{ id: this.userId, username: this.inputUsername }]; // Add self as admin
+            this.selectedAdmins = [{ id: this.userId, username: this.inputUsername }];
             this.selectedUsers = [];
             this.selectedGuests = [];
             this.memberSearchQuery = '';
@@ -1402,7 +1406,7 @@ var app = new Vue({
                 }
             } catch (e) { console.error(e); }
         },
-        
+
         openAiModal() {
             this.showAiModal = true;
             this.aiData = { idea: '', people: 5, budget: 100, notes: '' };
@@ -1413,7 +1417,7 @@ var app = new Vue({
                 alert("Please give me a general idea!");
                 return;
             }
-            
+
             this.aiLoading = true;
             try {
                 const response = await fetch('/group/items/suggest', {
@@ -1422,17 +1426,17 @@ var app = new Vue({
                     body: JSON.stringify(this.aiData)
                 });
                 const data = await response.json();
-                
+
                 if (data.result && data.items) {
                     this.showAiModal = false;
-                    
+
                     this.openCreateGroupModal();
-                    
+
                     this.newGroup.name = this.aiData.idea + " Group";
                     this.newGroup.description = this.aiData.idea;
                     this.newGroup.budget = this.aiData.budget;
                     this.newGroupItems = data.items;
-                    
+
                 } else {
                     alert("AI could not generate items: " + (data.msg || "Unknown error"));
                 }
@@ -1471,17 +1475,17 @@ var app = new Vue({
                 items: this.newGroupItems
             };
 
-             try {
+            try {
                 const response = await fetch('/group/create', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
                 const data = await response.json();
-                
+
                 if (data.result) {
                     this.showCreateGroupModal = false;
-                    this.fetchMyGroups(); 
+                    this.fetchMyGroups();
                     alert("Group created successfully!");
                 } else {
                     alert("Error: " + data.msg);
@@ -1491,11 +1495,11 @@ var app = new Vue({
                 alert("Failed to create group.");
             }
         },
-        
+
         removeNewItem(index) {
             this.newGroupItems.splice(index, 1);
         },
-        
+
         async deleteAccount() {
             if (!confirm("Are you sure you want to delete your account?")) return;
             if (!confirm("This action is PERMANENT and cannot be undone. Are you sure?")) return;
@@ -1522,7 +1526,7 @@ var app = new Vue({
                 this.headerSearchResults = [];
                 return;
             }
-            
+
             this.showHeaderSearch = true;
             this.headerSearchResults = [];
 
@@ -1554,11 +1558,17 @@ var app = new Vue({
                 this.inviteSearchResults = [];
                 return;
             }
+
             try {
-                const response = await fetch(`/user/search?q=${this.inviteSearchQuery}`);
+                const response = await fetch(`/user/search?q=${encodeURIComponent(this.inviteSearchQuery)}`);
                 const data = await response.json();
-                
-                // Filter out people already in the group
+
+                if (!data.result) {
+                    console.error("Search failed:", data.msg);
+                    this.inviteSearchResults = [];
+                    return;
+                }
+
                 const existingIds = [
                     ...(this.activeGroup.admins || []),
                     ...(this.activeGroup.users || []),
@@ -1566,40 +1576,81 @@ var app = new Vue({
                 ].map(m => m.id);
 
                 this.inviteSearchResults = (data.users || []).filter(u => !existingIds.includes(u.id));
-            } catch (e) { console.error(e); }
+
+                this.inviteSearchResults.forEach(user => {
+                    if (!this.inviteUserStates[user.id]) {
+                        this.$set(this.inviteUserStates, user.id, {
+                            role: 'users',
+                            sending: false
+                        });
+                    }
+                });
+
+            } catch (e) {
+                console.error("Search error:", e);
+                this.inviteSearchResults = [];
+            }
+        },
+        getRoleLabel(role) {
+            const labels = {
+                'admins': 'Admin',
+                'users': 'Member',
+                'guests': 'Guest'
+            };
+            return labels[role] || role;
         },
 
         async inviteUser(user) {
-            this.inviteSending = true;
+            const userState = this.inviteUserStates[user.id];
+            if (!userState || userState.sending) return;
+
+            userState.sending = true;
+            this.inviteStatusMessage = '';
+
             try {
-                const response = await fetch('/group/member/add', {
+                const response = await fetch('/group/user/add', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         groupId: this.activeGroup.groupId,
                         user: { id: user.id, username: user.username },
-                        role: this.inviteRole
+                        role: userState.role
                     })
                 });
+
                 const data = await response.json();
+
                 if (data.result) {
-                    this.inviteStatusMessage = `Added ${user.username}!`;
+                    this.inviteStatusMessage = `${user.username} added as ${this.getRoleLabel(userState.role)}!`;
                     this.inviteStatusColor = 'green';
-                    this.fetchGroupDetails(this.activeGroup.groupId);
-                    
+
+                    await this.fetchGroupDetails(this.activeGroup.groupId);
+
                     this.inviteSearchResults = this.inviteSearchResults.filter(u => u.id !== user.id);
+
+                    this.$delete(this.inviteUserStates, user.id);
+
+                    setTimeout(() => {
+                        this.inviteStatusMessage = '';
+                    }, 2000);
+
                 } else {
-                    this.inviteStatusMessage = data.msg;
+                    this.inviteStatusMessage = data.msg || 'Failed to add user';
                     this.inviteStatusColor = 'red';
+                    userState.sending = false;
                 }
-            } catch (e) { console.error(e); }
-            finally { this.inviteSending = false; }
+            } catch (e) {
+                console.error("Invite error:", e);
+                this.inviteStatusMessage = 'Connection error';
+                this.inviteStatusColor = 'red';
+                userState.sending = false;
+            }
         },
 
         async getAiItemsForGroup() {
             this.aiLoading = true;
             try {
-                
+
                 const response = await fetch('/group/items/suggest', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1609,22 +1660,22 @@ var app = new Vue({
                         budget: this.aiGroupBudget,
                         notes: this.aiGroupNotes,
                         groupId: this.activeGroup.groupId,
-                        addToGroup: true 
+                        addToGroup: true
                     })
                 });
                 const data = await response.json();
-                
+
                 if (data.result) {
                     if (data.added) {
                         this.fetchGroupDetails(this.activeGroup.groupId);
                     } else {
-                        
+
                         for (let item of data.items) {
-                           await fetch('/add-item', {
-                               method: 'POST', 
-                               headers: {'Content-Type': 'application/json'},
-                               body: JSON.stringify({ groupId: this.activeGroup.groupId, item: item })
-                           });
+                            await fetch('/add-item', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ groupId: this.activeGroup.groupId, item: item })
+                            });
                         }
                         this.fetchGroupDetails(this.activeGroup.groupId);
                     }
