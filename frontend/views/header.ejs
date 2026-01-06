@@ -4,7 +4,7 @@
             <a href="/display">SimpleFinance</a>
         </div>
 
-        <div class="header-search" style="position: relative; flex-grow: 1; max-width: 400px; margin: 0 20px;">
+        <div v-if="loggedIn" class="header-search" style="position: relative; flex-grow: 1; max-width: 400px; margin: 0 20px;">
             <input type="text" 
                    v-model="headerSearchQuery" 
                    @input="handleHeaderSearch" 
