@@ -14,8 +14,7 @@ const azureModel = {
     login: async (username, password) => {
         try {
             const response = await axios.post(createUrl("/user/login"), {
-                username: username,
-                password: password
+                username: username,password: password
             });
             console.log(response.data);
             return response.data;
@@ -28,15 +27,12 @@ const azureModel = {
     register: async (username, password) => {
         try {
             const response = await axios.post(createUrl("/user/register"), {
-                username: username,
-                password: password
+                username: username, password: password
             });
             console.log(response.data);
             return response.data;
-        } catch (error) {
-            console.error("Azure Login Error:", error.message);
-            return { result: false, msg: "Connection to backend failed - check Azure" };
-        }
+        } catch (error) { console.error("Azure Login Error:", error.message);
+            return { result: false, msg: "Connection to backend failed - check Azure" };}
     },
 
     updateUser: async (userId, updates) => {
@@ -46,10 +42,8 @@ const azureModel = {
                 ...updates
             });
             return response.data;
-        } catch (error) {
-            console.error("Azure updateUser Error:", error.message);
-            return { result: false, msg: "Failed to update user" };
-        }
+        } catch (error) { console.error("Azure updateUser Error:", error.message);
+            return { result: false, msg: "Failed to update user" };}
     },
 
     getGroupsByAdmin: async (username) => {
@@ -91,8 +85,7 @@ const azureModel = {
                 params: { groupId }
             });
             return response.data;
-        } catch (error) {
-            console.error("Azure getGroupById Error:", error.message);
+        } catch (error) { console.error("Azure getGroupById Error:", error.message);
             return { result: false, msg: "Group not found" };
         }
     },
@@ -103,8 +96,7 @@ const azureModel = {
                 params: { userId }
             });
             return response.data;
-        } catch (error) {
-            console.error("Azure getUserById Error:", error.message);
+        } catch (error) { console.error("Azure getUserById Error:", error.message);
             return { result: false, msg: "User not found" };
         }
     },
@@ -112,12 +104,10 @@ const azureModel = {
     addItemToGroup: async (groupId, item) => {
         try {
             const response = await axios.post(createUrl("/group/item/add"), {
-                groupId: groupId,
-                item: item
+                groupId: groupId, item: item
             });
             return response.data;
-        } catch (error) {
-            console.error("Azure addItemToGroup Error:", error.message);
+        } catch (error) { console.error("Azure addItemToGroup Error:", error.message);
             return { result: false, msg: "Failed to add item" };
         }
     },
@@ -125,12 +115,10 @@ const azureModel = {
     removeItemFromGroup: async (groupId, itemId) => {
         try {
             const response = await axios.post(createUrl("/group/item/remove"), {
-                groupId: groupId,
-                itemId: itemId
+                groupId: groupId, itemId: itemId
             });
             return response.data;
-        } catch (error) {
-            console.error("Azure removeItemFromGroup Error:", error.message);
+        } catch (error) { console.error("Azure removeItemFromGroup Error:", error.message);
             return { result: false, msg: "Failed to remove item" };
         }
     },
@@ -138,13 +126,10 @@ const azureModel = {
     updateItem: async (groupId, itemId, updates) => {
         try {
             const response = await axios.post(createUrl("/group/item/update"), {
-                groupId: groupId,
-                itemId: itemId,
-                updates: updates
+                groupId: groupId, itemId: itemId, updates: updates
             });
             return response.data;
-        } catch (error) {
-            console.error("Azure updateItem Error:", error.message);
+        } catch (error) { console.error("Azure updateItem Error:", error.message);
             return { result: false, msg: "Failed to update item" };
         }
     },
@@ -152,14 +137,10 @@ const azureModel = {
     voteItem: async (groupId, itemId, username, action = "toggle") => {
         try {
             const response = await axios.post(createUrl("/group/item/vote"), {
-                groupId: groupId,
-                itemId: itemId,
-                username: username,
-                action: action
+                groupId: groupId, itemId: itemId, username: username, action: action
             });
             return response.data;
-        } catch (error) {
-            console.error("Azure voteItem Error:", error.message);
+        } catch (error) { console.error("Azure voteItem Error:", error.message);
             return { result: false, msg: "Failed to vote on item" };
         }
     },
@@ -167,13 +148,10 @@ const azureModel = {
     sendFriendRequest: async (fromId, fromUsername, toUsername) => {
         try {
             const response = await axios.post(createUrl("/user/friend/request"), {
-                id_from_username_request: fromId,
-                from_username_request: fromUsername,
-                to_username_request: toUsername
+                id_from_username_request: fromId, from_username_request: fromUsername, to_username_request: toUsername
             });
             return response.data;
-        } catch (error) {
-            console.error("Azure sendFriendRequest Error:", error.message);
+        } catch (error) { console.error("Azure sendFriendRequest Error:", error.message);
             return { result: false, msg: "Failed to send request" };
         }
     },
@@ -181,13 +159,10 @@ const azureModel = {
     respondFriendRequest: async (userId, friendUsername, accepted) => {
         try {
             const response = await axios.post(createUrl("/user/friend/response"), {
-                userId: userId,
-                friendUsername: friendUsername,
-                accepted: accepted
+                userId: userId, friendUsername: friendUsername, accepted: accepted
             });
             return response.data;
-        } catch (error) {
-            console.error("Azure respondFriendRequest Error:", error.message);
+        } catch (error) { console.error("Azure respondFriendRequest Error:", error.message);
             return { result: false, msg: "Failed to respond" };
         }
     },
@@ -196,8 +171,7 @@ const azureModel = {
         try {
             const response = await axios.post(createUrl("/group/create"), groupData);
             return response.data;
-        } catch (error) {
-            console.error("Azure createGroup Error:", error.message);
+        } catch (error) { console.error("Azure createGroup Error:", error.message);
             return { result: false, msg: "Failed to create group" };
         }
     },
@@ -221,13 +195,10 @@ const azureModel = {
     changeMemberRole: async (groupId, userId, username, role) => {
         try {
             const response = await axios.post(createUrl("/group/user/role/change"), {
-                groupId,
-                user: { id: userId, username },
-                role
+                groupId, user: { id: userId, username }, role
             });
             return response.data;
-        } catch (error) {
-            console.error("Azure changeMemberRole Error:", error.message);
+        } catch (error) { console.error("Azure changeMemberRole Error:", error.message);
             return { result: false, msg: "Failed to change role" };
         }
     },
@@ -235,12 +206,10 @@ const azureModel = {
     removeMemberFromGroup: async (groupId, userId, username) => {
         try {
             const response = await axios.post(createUrl("/group/user/remove"), {
-                groupId,
-                user: { id: userId, username }
+                groupId, user: { id: userId, username }
             });
             return response.data;
-        } catch (error) {
-            console.error("Azure removeMemberFromGroup Error:", error.message);
+        } catch (error) { console.error("Azure removeMemberFromGroup Error:", error.message);
             return { result: false, msg: "Failed to remove member" };
         }
     },
@@ -249,8 +218,7 @@ const azureModel = {
         try {
             const response = await axios.post(createUrl("/group/delete"), { groupId });
             return response.data;
-        } catch (error) {
-            console.error("Azure deleteGroup Error:", error.message);
+        } catch (error) { console.error("Azure deleteGroup Error:", error.message);
             return { result: false, msg: "Failed to delete group" };
         }
     },
@@ -258,16 +226,10 @@ const azureModel = {
     getAiSuggestions: async (idea, people, budget, notes) => {
         try {
             const response = await axios.post(createUrl("/group/items/suggest"), {
-                groupId: "generating_new_group",
-                idea: idea,
-                people: people,
-                budget: budget,
-                additional_notes: notes,
-                addToGroup: false
+                groupId: "generating_new_group", idea: idea, people: people, budget: budget, additional_notes: notes, addToGroup: false
             });
             return response.data;
-        } catch (error) {
-            console.error("Azure getAiSuggestions Error:", error.message);
+        } catch (error) { console.error("Azure getAiSuggestions Error:", error.message);
             return { result: false, msg: "AI Generation failed" };
         }
     },
@@ -276,8 +238,7 @@ const azureModel = {
         try {
             const response = await axios.post(createUrl("/user/delete"), { userId });
             return response.data;
-        } catch (error) {
-            console.error("Azure deleteUser Error:", error.message);
+        } catch (error) { console.error("Azure deleteUser Error:", error.message);
             return { result: false, msg: "Failed to delete user" };
         }
     },
@@ -285,13 +246,10 @@ const azureModel = {
     addMemberToGroup: async (groupId, user, role) => {
         try {
             const response = await axios.post(createUrl("/group/user/add"), {
-                groupId: groupId,
-                user: user,
-                role: role
+                groupId: groupId, user: user, role: role
             });
             return response.data;
-        } catch (error) {
-            console.error("Azure addMemberToGroup Error:", error.message);
+        } catch (error) { console.error("Azure addMemberToGroup Error:", error.message);
             return { result: false, msg: "Failed to add member" };
         }
     },
@@ -301,8 +259,7 @@ const azureModel = {
                 params: { q: query }
             });
             return response.data;
-        } catch (error) {
-            console.error("Azure searchUsers Error:", error.message);
+        } catch (error) { console.error("Azure searchUsers Error:", error.message);
             return { result: false, users: [] };
         }
     },
