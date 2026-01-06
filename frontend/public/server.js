@@ -1473,6 +1473,7 @@ var app = new Vue({
         removeNewItem(index) {
             this.newGroupItems.splice(index, 1);
         },
+        
         async deleteAccount() {
             if (!confirm("Are you sure you want to delete your account?")) return;
             if (!confirm("This action is PERMANENT and cannot be undone. Are you sure?")) return;
@@ -1493,7 +1494,7 @@ var app = new Vue({
             } catch (e) { console.error(e); }
         },
 
-        // --- 2. HEADER SEARCH ---
+        // search bar in the header
         async handleHeaderSearch() {
             if (this.headerSearchQuery.length < 2) {
                 this.headerSearchResults = [];
@@ -1503,13 +1504,11 @@ var app = new Vue({
             this.showHeaderSearch = true;
             this.headerSearchResults = [];
 
-            // Search Groups (Local Filter)
             const groupMatches = this.groups.filter(g => g.name.toLowerCase().includes(this.headerSearchQuery.toLowerCase()));
             groupMatches.forEach(g => {
                 this.headerSearchResults.push({ type: 'group', name: g.name, id: g.id, sub: 'Group' });
             });
 
-            // Search Users (Remote)
             try {
                 const response = await fetch(`/user/search?q=${this.headerSearchQuery}`);
                 const data = await response.json();
@@ -1528,7 +1527,6 @@ var app = new Vue({
             if (result.type === 'user') window.location.href = `/profile?userId=${result.id}`;
         },
 
-        // --- 3. INVITE MEMBER (Search & Add) ---
         async searchInviteUsers() {
              if (this.inviteSearchQuery.length < 2) {
                 this.inviteSearchResults = [];
@@ -1562,7 +1560,7 @@ var app = new Vue({
                 const data = await response.json();
                 if (data.result) {
                     this.fetchGroupDetails(this.activeGroup.groupId);
-                    this.inviteSearchQuery = ''; // Reset
+                    this.inviteSearchQuery = '';
                     this.inviteSearchResults = [];
                     alert(`${user.username} added!`);
                 } else {
@@ -1571,7 +1569,6 @@ var app = new Vue({
             } catch (e) { console.error(e); }
         },
 
-        // --- 4. AI SUGGESTIONS IN GROUP ---
         async getAiItemsForGroup() {
             this.aiLoading = true;
             try {
