@@ -285,12 +285,25 @@ const azureModel = {
     addMemberToGroup: async (groupId, user, role) => {
         try {
             const response = await axios.post(`${BASE_URL}/group/user/add`, {
-                groupId, user, role
+                groupId: groupId,
+                user: user,
+                role: role
             });
             return response.data;
         } catch (error) {
             console.error("Azure addMemberToGroup Error:", error.message);
             return { result: false, msg: "Failed to add member" };
+        }
+    },
+    searchUsers: async (query) => {
+        try {
+            const response = await axios.get(`${BASE_URL}/user/search`, {
+                params: { q: query }
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Azure searchUsers Error:", error.message);
+            return { result: false, users: [] };
         }
     },
 };

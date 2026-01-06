@@ -55,6 +55,36 @@
                         </div>
                     </div>
 
+                    <div class="modal-overlay" v-if="showInviteModal" @click.self="closeInviteModal">
+                        <div class="modal-card">
+                            <div class="modal-header">
+                                <h2>Invite Members</h2>
+                                <button class="close-btn" @click="closeInviteModal">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <input type="text" v-model="inviteSearchQuery" @input="searchInviteUsers" 
+                                       placeholder="Search by username..." class="form-control" style="margin-bottom: 15px;">
+                                
+                                <div class="invite-results" style="max-height: 200px; overflow-y: auto;">
+                                    <div v-for="u in inviteSearchResults" :key="u.id" 
+                                         style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee;">
+                                        <span style="font-weight: bold;">{{ u.username }}</span>
+                                        <div style="display: flex; gap: 5px;">
+                                            <select v-model="inviteRole" style="padding: 5px;">
+                                                <option value="users">Member</option>
+                                                <option value="admins">Admin</option>
+                                                <option value="guests">Guest</option>
+                                            </select>
+                                            <button class="btn btn-sm btn-success" @click="inviteUser(u)" :disabled="inviteSending">Add</button>
+                                        </div>
+                                    </div>
+                                    <p v-if="inviteSearchQuery.length > 1 && inviteSearchResults.length === 0" class="text-muted">No users found.</p>
+                                </div>
+                                <p v-if="inviteStatusMessage" :style="{color: inviteStatusColor, marginTop: '10px'}">{{ inviteStatusMessage }}</p>
+                            </div>
+                        </div>
+                    </div>
+
                     <div v-else class="card" style="margin-bottom: 20px;">
                         <button class="btn btn-danger" @click="leaveGroup">Leave Group</button>
                     </div>

@@ -134,6 +134,11 @@ var app = new Vue({
         inviteSearchQuery: '',
         inviteSearchResults: [],
         inviteRole: 'users',
+        showInviteModal: false,
+        inviteStatusMessage: '',
+        inviteStatusColor: '',
+        inviteSending: false,
+        showRemoveConfirm: false,
 
         // AI Group Modal Data
         aiGroupIdea: '',
@@ -473,10 +478,27 @@ var app = new Vue({
                     this.inputEmail = data.user.email || '';
                     this.searchUserBio = data.user.bio || '';
                     this.bioDraft = this.searchUserBio;
+                    this.fetchUserGroupsStats(data.user.username);
                 }
             } catch (error) {
                 console.error("Error loading profile:", error);
             }
+        },
+        async fetchUserGroupsStats(username) {
+            try {
+                const [adminRes, memberRes, guestRes] = await Promise.all([
+                    fetch('/my-groups', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ username }) }),
+                    fetch('/membership-groups', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ username }) }),
+                ]);
+                
+                const adminData = await adminRes.json();
+                const memberData = await memberRes.json();
+                
+                const totalGroups = (adminData.groups || []).length + (memberData.groups || []).length;
+                
+                this.$set(this, 'profileGroupCount', totalGroups);
+                
+            } catch(e) { console.error(e); }
         },
 
         async saveBio() {
@@ -680,15 +702,15 @@ var app = new Vue({
         },
         openInviteModal() {
             this.showInviteModal = true;
-            this.inviteIdentifier = '';
+            this.inviteSearchQuery = '';
+            this.inviteSearchResults = [];
             this.inviteStatusMessage = '';
-            this.inviteStatusColor = 'red';
         },
 
         closeInviteModal() {
             this.showInviteModal = false;
         },
-
+        
         async sendInvite() {
             if (!this.inviteIdentifier || this.inviteSending) return;
 
@@ -1528,25 +1550,27 @@ var app = new Vue({
         },
 
         async searchInviteUsers() {
-             if (this.inviteSearchQuery.length < 2) {
+            if (this.inviteSearchQuery.length < 2) {
                 this.inviteSearchResults = [];
                 return;
             }
             try {
                 const response = await fetch(`/user/search?q=${this.inviteSearchQuery}`);
                 const data = await response.json();
-                // Filter out existing members
-                const existingIds = [
-                    ...(this.activeGroup.admins||[]), 
-                    ...(this.activeGroup.users||[]), 
-                    ...(this.activeGroup.guests||[])
-                ].map(m => m.id);
                 
+                // Filter out people already in the group
+                const existingIds = [
+                    ...(this.activeGroup.admins || []),
+                    ...(this.activeGroup.users || []),
+                    ...(this.activeGroup.guests || [])
+                ].map(m => m.id);
+
                 this.inviteSearchResults = (data.users || []).filter(u => !existingIds.includes(u.id));
             } catch (e) { console.error(e); }
         },
 
         async inviteUser(user) {
+            this.inviteSending = true;
             try {
                 const response = await fetch('/group/member/add', {
                     method: 'POST',
@@ -1559,14 +1583,17 @@ var app = new Vue({
                 });
                 const data = await response.json();
                 if (data.result) {
+                    this.inviteStatusMessage = `Added ${user.username}!`;
+                    this.inviteStatusColor = 'green';
                     this.fetchGroupDetails(this.activeGroup.groupId);
-                    this.inviteSearchQuery = '';
-                    this.inviteSearchResults = [];
-                    alert(`${user.username} added!`);
+                    
+                    this.inviteSearchResults = this.inviteSearchResults.filter(u => u.id !== user.id);
                 } else {
-                    alert(data.msg);
+                    this.inviteStatusMessage = data.msg;
+                    this.inviteStatusColor = 'red';
                 }
             } catch (e) { console.error(e); }
+            finally { this.inviteSending = false; }
         },
 
         async getAiItemsForGroup() {
