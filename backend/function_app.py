@@ -34,10 +34,12 @@ def register_user(req: func.HttpRequest) -> func.HttpResponse:
             )
         except CosmosResourceNotFoundError:
             pass
+        if  user.username is None or user.password is None or len(user.username) <= 4 or len(user.password) <= 4 or len(user.username) >= 20 or len(user.password) >= 20: 
+            invalid_detail_length_response_body =json.dumps({"result" : False, "msg" : "Passwords or usernames must have more than 4 characters and less than 20"})
+            return func.HttpResponse(invalid_detail_length_response_body, status_code=400, mimetype="application/json")
            
         if not bcrypt.identify(user.password):
             user.password = hash_password(user.password)
-        logging.warning(f"DEBUG stored password: {user.password}")
         UserContainerProxy.create_item(body=user.to_dict())
         return func.HttpResponse(
             json.dumps({"result": True, "msg": "OK", "userId": user.id}),
