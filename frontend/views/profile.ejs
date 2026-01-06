@@ -83,7 +83,7 @@
 
 
                     <div class="profile-actions">
-                        <div v-else class="action-group">
+                        <div class="action-group">
                             
                             <template v-if="isFriend">
                                 <button class="btn btn-success" disabled>Friends</button>
@@ -101,11 +101,7 @@
                             <template v-else>
                                 <button class="btn btn-primary" @click="sendFriendRequest">Add Friend</button>
                             </template>
-                            
-                            <div class="danger-actions">
-                                <button class="btn btn-danger btn-sm">Report</button>
-                                <button class="btn btn-danger btn-sm">Block</button>
-                            </div>
+                
                         </div>
                     </div>
                 </div>

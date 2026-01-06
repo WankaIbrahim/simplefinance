@@ -158,8 +158,8 @@ var app = new Vue({
                 this.fetchMyGroups();
                 this.fetchMembershipGroups();
             }
+            this.fetchMyData();
         }
-        this.fetchMyData();
 
         const urlParams = new URLSearchParams(window.location.search);
 
