@@ -43,10 +43,17 @@ You can also run `run.bat` inside `..\simplefinance\` - it will automatically in
 ```
 
 ### How to Deploy on Azure and Google Cloud
-#### Azure Deployment
-1. Login to Azure - `az login`
-2. 
-3.
-4.
 
-#### Google Cloud Deployment 
+#### Azure Deployment
+
+1. Login to Azure - `az login`
+2. On Azure, create the following:
+    - this 
+3. Run `func azure functionapp publish simplefinance --python --build remote`
+4. You must go to `simplefinance\backend\` and find the `local.settings.json` and update the following:
+    - "AzureCosmosDBConnectionString" - your Azure CosmosDB Connection string, which can be found under
+    - "DeploymentURL" - your deployment URL, which can be found
+    - "FunctionAppKey" - your Azure function group, which can be found
+    - "GEMINI_API_KEY" - you need to create a Gemini API key. You can do it following [this guide](https://ai.google.dev/gemini-api/docs/api-key)
+
+#### Google Cloud Deployment
