@@ -63,6 +63,13 @@ You can also run `run.bat` inside `..\simplefinance\` - it will automatically in
 
 #### Google Cloud Deployment
 
+You must change the endpoints in `simplefinance\frontend\.env` as follows:
+
+1. AZURE_FUNCTION_URL - your Azure function group, which can be found
+2. HOST_KEY = your Azure function group, which can be found
+
+To deploy to Google App Engine:
+
 1. Login to Google Cloud Engine
 2. Create a new App Engine
 3. Create a 
