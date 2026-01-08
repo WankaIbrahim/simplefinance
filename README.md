@@ -55,11 +55,14 @@ You can also run `run.bat` inside `..\simplefinance\` - it will automatically in
      - Runtime stack: Python
      - Region: same region as Cosmos DB
 3. Run `func azure functionapp publish simplefinance --python --build remote`
-4. You must go to `simplefinance\backend\` and find the `local.settings.json` and update the following:
-    - "AzureCosmosDBConnectionString" - your Azure CosmosDB Connection string, which can be found under
-    - "DeploymentURL" - your deployment URL, which can be found
-    - "FunctionAppKey" - your Azure function group, which can be found
-    - "GEMINI_API_KEY" - you need to create a Gemini API key. You can do it following [this guide](https://ai.google.dev/gemini-api/docs/api-key)
+4. You must go to the enivronment variables of the function app and update the following:
+   - "AzureCosmosDBConnectionString"** – your Azure Cosmos DB connection string, which can be found in the Azure Portal under your Cosmos DB account → 
+   - "DatabaseName"** – the name of the Cosmos DB database used by the application
+   - "UserContainerName"** – the name of the Cosmos DB container storing user data
+   - "GroupContainerName"** – the name of the Cosmos DB container storing group data
+   - "DeploymentURL"** – your application’s deployment URL, which can be found in the Azure Function App **Overview** page
+   - "FunctionAppKey"** – your Azure Function App key, which can be found under **App keys** in the Azure Portal
+   - "GEMINI_API_KEY"** – an API key for Google Gemini. You need to create a Gemini API key by following [this guide](https://ai.google.dev/gemini-api/docs/api-key)
 
 #### Google Cloud Deployment
 
