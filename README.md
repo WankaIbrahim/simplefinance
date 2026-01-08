@@ -1,57 +1,52 @@
-# SimpleFinance
-## COMP3207 Cloud App - Group Coursework
+# COMP3207 Cloud App - Group Coursework
+## SimpleFinance - Group L
 
-Last update: `05/01/2026`
+### How to Run Localy
+When you download the folder locally, you should have the following file structure:
 
-File Structure:
-```
-> backend
--> shared_code - contains the code for the User and Group objects
--> tests
---> test_functions.py - contains the unit tests for the azure function app
--> examples.py - provides example usage of the azure function app
--> function.app - contains the main azure function app logic
+```bash
+simplefinance
+|- backend
+|- frontend
 ```
 
-```
-> frontend
+Folder `backend` contains the Azure development server that will handle the calls to the Azure API.
+Folder `frontend` contains the Vue and Express.js server that will handle the interaction between the user and the backend.
 
--> public - additional vue logic
---> game.js
---> main.css
---> header.css
+Before you can run the backend and frontend, you must have the following installed:
 
--> src - put all logic required for the front-end here
---> azureModel.js - connection and requests that will go to the Azure server go here
+- [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) installed
+- [Azure Functions Core Tools](https://learn.microsoft.com/en-us/azure/azure-functions/functions-run-local) installed
+- [Google Cloud SDK (gcloud)](https://cloud.google.com/sdk/docs/install) installed
+- A project created in the [Google Cloud Console](https://console.cloud.google.com/)
 
--> views - put all html in here
---> display.ejs - holds the login and welcome pages (localhost:8080/display)
---> group-view.ejs - view for a spending group (localhost:8080/group-view)
---> header.ejs - website header (nav menu) - imported on all pages
---> footer.ejs - website footer - imported on all pages
---> welcome.ejs - not used (localhost:8080/)
---> login.ejs - not used
+When inside `..\simplefinance`, run the backend localy with the following commands:
 
--> app.js - server setup
-```
-
-To run the back-end server locally:
-```
+```bash
+cd backend
 pip install -r requirements.txt
-```
-then
-```
 func start
 ```
 
+When inside `..\simplefinance`, run the frontend localy with the following commands:
 
-To run the front-end server locally:
-```
+```bash
+cd frontend
 npm install
+npm start
 ```
 
-and then
+You can also run `run.bat` inside `..\simplefinance\` - it will automatically install all dependencies.
 
 ```
-npm run
+.\run.bat
 ```
+
+### How to Deploy on Azure and Google Cloud
+#### Azure Deployment
+1. Login to Azure - `az login`
+2. 
+3.
+4.
+
+#### Google Cloud Deployment 
