@@ -140,7 +140,7 @@
                                     
                                             <div class="modal-footer" v-if="!aiLoading">
                                                 <button class="btn btn-secondary" @click="showAiModal = false">Cancel</button>
-                                                <button class="btn btn-primary" @click="generateGroup">Generate ✨</button>
+                                                <button class="btn btn-primary" @click="generateGroup">✨ Generate ✨</button>
                                             </div>
                                         </div>
                                     </div>
@@ -168,7 +168,7 @@
                                                 </div>
                                     
                                                 <div v-if="newGroupItems.length > 0" style="background: rgba(255, 215, 0, 0.05); padding: 15px; border-radius: 8px; border: 1px solid var(--accent); margin-bottom: 20px;">
-                                                    <h4 style="color: var(--accent); margin-bottom: 10px;">✨ AI Suggestions</h4>
+                                                    <h4 style="color: var(--accent); margin-bottom: 10px;">✨ AI Suggestions ✨</h4>
                                                     <p class="text-muted" style="font-size: 0.9rem; margin-bottom: 10px;">Review items before creating the group.</p>
                                                     
                                                     <div class="items-list-preview" style="max-height: 200px; overflow-y: auto;">
@@ -282,8 +282,9 @@
                     <div class="card">
                         <h3>My Friends</h3>
                         <ul v-if="friends.length > 0">
-                            <li v-for="friend in friends" :key="friend">
-                                {{ friend }}
+                            <li v-for="friend in friends" :key="friend" style="list-style-type: none">
+                                <a :href="'/profile?userId=' + friend.id" class="fill-div">{{ friend
+                                }}</a>
                             </li>
                         </ul>
                         <p v-else class="text-muted">No friends yet.</p>

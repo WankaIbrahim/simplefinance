@@ -57,3 +57,7 @@ You can also run `run.bat` inside `..\simplefinance\` - it will automatically in
     - "GEMINI_API_KEY" - you need to create a Gemini API key. You can do it following [this guide](https://ai.google.dev/gemini-api/docs/api-key)
 
 #### Google Cloud Deployment
+
+1. Login to Google Cloud Engine
+2. Create a new App Engine
+3. Create a 
