@@ -22,14 +22,14 @@
                 <div class="sidebar-overlay" :class="{ 'active': leftSidebarOpen || rightSidebarOpen }"
                     @click="closeSidebars">
                 </div>
-                <aside class="sidebar-left" v-if="loggedIn" :class="{ 'open': leftSidebarOpen }">
+                <!-- <aside class="sidebar-left" v-if="loggedIn" :class="{ 'open': leftSidebarOpen }">
                     <h3>Menu</h3>
                     <p>Welcome, {{ inputUsername }}</p>
                     <ul>
                         <li><a href="/">Home</a></li>
                         <li><a href="/settings">Settings</a></li>
                     </ul>
-                </aside>
+                </aside> -->
 
                 <main class="content" style="display:block; justify-content: center;">
                     <div class="login" v-if="!loggedIn" style="display: grid;
@@ -65,9 +65,10 @@
 
                     <div v-else>
                         <div v-if="windowWidth <= 900"
-                            style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                            <button @click="leftSidebarOpen = true" class="btn">Menu &gt;</button>
-                            <button @click="rightSidebarOpen = true" class="btn">&lt; Social</button>
+                            style="position: relative;
+                            float: right;">
+                            <!-- <button @click="leftSidebarOpen = true" class="btn">Menu &gt;</button> -->
+                            <button @click="rightSidebarOpen = true" class="btn btn-primary">Friends</button>
                         </div>
 
                         <p>Hello {{inputUsername}}, ready to make budgets?</p>
