@@ -66,6 +66,3 @@ You can also run `run.bat` inside `..\simplefinance\` - it will automatically in
 1. Login to Google Cloud Engine
 2. Create a new App Engine
 3. Create a 
-
-###
-Our project runs over the expected LoC limit, as we were unable to optimise the code to make use of boilerplate code. This issue appeared more often in the backend as we were unable to extract the checking of existing users/groups as its own function without this presenting difficulties particularly the return types. However, we felt it was worth the added lines to be able to showcase the full extent of our prototype and the features we had intended to include.
