@@ -8,7 +8,7 @@
     "UserContainerName" : "users",
     "GroupContainerName": "groups",
     "DeploymentURL" : "simplefinance.azurewebsites.net",
-    "FunctionAppKey" : "jHMTQt3HujrD95gb7i8X1p5ovrH-yzStfSeLDHPLMiEnAzFuy3B_jQ==",
-    "GEMINI_API_KEY": "AIzaSyABvn-xFRQ1aDl8MS1KR9Hlup_dUWnuAKc"
+    "FunctionAppKey" : "",
+    "GEMINI_API_KEY": ""
   }
 }
